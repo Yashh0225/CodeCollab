@@ -277,8 +277,18 @@ export default function Home() {
       <div className="home-actions">
         {/* Create Room */}
         <div className="action-card">
-          <div className="action-card-icon" style={{ background: 'var(--accent-glow)', color: 'var(--accent-primary)' }}>
-            ✦
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+            <div className="action-card-icon" style={{ background: 'var(--accent-glow)', color: 'var(--accent-primary)', marginBottom: 0 }}>
+              ✦
+            </div>
+            <button
+              className="btn btn-primary"
+              style={{ padding: '8px 16px' }}
+              onClick={handleCreateRoom}
+              disabled={creating}
+            >
+              {creating ? 'Creating...' : 'Create Room'}
+            </button>
           </div>
           <h3>Create a Room</h3>
           <p>Start a new coding session. Share the link with others to collaborate in real-time.</p>
@@ -295,7 +305,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label" htmlFor="room-lang-select">Language</label>
             <select
               id="room-lang-select"
@@ -315,26 +325,27 @@ export default function Home() {
               <option value="css">CSS</option>
             </select>
           </div>
-
-          <button
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '12px' }}
-            onClick={handleCreateRoom}
-            disabled={creating}
-          >
-            {creating ? 'Creating...' : '✦ Create Room'}
-          </button>
         </div>
 
         {/* Join Room */}
         <div className="action-card">
-          <div className="action-card-icon" style={{ background: 'rgba(52, 211, 153, 0.12)', color: 'var(--color-success)' }}>
-            🔗
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+            <div className="action-card-icon" style={{ background: 'rgba(52, 211, 153, 0.12)', color: 'var(--color-success)', marginBottom: 0 }}>
+              🔗
+            </div>
+            <button
+              className="btn btn-ghost"
+              style={{ padding: '8px 16px' }}
+              onClick={handleJoinRoom}
+              disabled={!roomIdInput.trim()}
+            >
+              Join Room
+            </button>
           </div>
           <h3>Join a Room</h3>
           <p>Enter a room ID or paste a share link to join an existing coding session.</p>
 
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label" htmlFor="join-room-input">Room ID or link</label>
             <input
               id="join-room-input"
@@ -346,15 +357,6 @@ export default function Home() {
               onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
             />
           </div>
-
-          <button
-            className="btn btn-ghost"
-            style={{ width: '100%', padding: '12px', marginTop: '16px' }}
-            onClick={handleJoinRoom}
-            disabled={!roomIdInput.trim()}
-          >
-            → Join Room
-          </button>
         </div>
       </div>
 

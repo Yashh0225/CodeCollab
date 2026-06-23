@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
+  padding: 12px 32px;
   border-bottom: 1px solid var(--border-primary);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -44,7 +44,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 80px 24px 40px;
+  padding: 24px 24px 16px;
   animation: fadeIn 0.6s ease-out;
 }
 
@@ -59,7 +59,7 @@
   font-size: 12px;
   font-weight: 500;
   color: var(--accent-secondary);
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .home-hero h1 {
@@ -67,7 +67,7 @@
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -1px;
-  margin: 0 0 16px;
+  margin: 0 0 8px;
   max-width: 700px;
 }
 
@@ -81,9 +81,9 @@
 .home-hero p {
   font-size: 16px;
   color: var(--text-secondary);
-  max-width: 500px;
-  line-height: 1.7;
-  margin: 0 0 40px;
+  max-width: 700px;
+  line-height: 1.6;
+  margin: 0 0 16px;
 }
 
 /* --- Action Cards --- */
@@ -132,13 +132,13 @@
 .action-card p {
   font-size: 13px;
   color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0 0 20px;
+  line-height: 1.5;
+  margin: 0 0 12px;
 }
 
 /* --- Form elements --- */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .form-label {
