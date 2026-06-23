@@ -14,10 +14,11 @@
 5. [Database Schema](#database-schema)
 6. [Phase 1: Setup + Monaco Editor](#phase-1-setup--monaco-editor)
 7. [Phase 2: Auth + Room Creation](#phase-2-auth--room-creation)
-8. [Development Phases Summary](#development-phases-summary)
-8. [Deployment Guide](#deployment-guide)
-9. [Environment Variables](#environment-variables)
-10. [Running Locally](#running-locally)
+8. [Phase 3-5: Sync Engine, Presence, & Persistence](#phase-3-5-sync-engine-presence--persistence)
+9. [Development Phases Summary](#development-phases-summary)
+10. [Deployment Guide](#deployment-guide)
+11. [Environment Variables](#environment-variables)
+12. [Running Locally](#running-locally)
 
 ---
 
@@ -344,15 +345,48 @@ npm run dev    # http://localhost:5173
 
 ---
 
+## Phase 3-5: Sync Engine, Presence, & Persistence
+
+**Status**: ✅ Complete  
+**Timeline**: Week 1–2  
+**Focus**: Yjs CRDTs, WebSocket real-time communication, Coloured Cursors, and Upstash Redis document storage
+
+### What Was Built
+
+| Component | File | Purpose |
+|---|---|---|
+| **Yjs Binding** | `src/hooks/useYjs.js` | Initializes `Y.Doc` and connects `WebsocketProvider` to port 1234. |
+| **Monaco Binding** | `src/components/Editor.jsx` | Binds `ytext` to Monaco's text model using `MonacoBinding`. |
+| **Awareness Hook** | `src/hooks/useAwareness.js` | Subscribes to `provider.awareness` to track online users' metadata. |
+| **Live Cursors** | `Editor.jsx` & `index.css` | Injects remote selections into Monaco to display coloured carets. |
+| **Collaborator List** | `src/components/Sidebar.jsx` | Renders dynamic list of live users based on WebSocket state. |
+| **Sync Server** | `sync-server/server.js` | Dedicated `y-websocket` Node backend managing real-time peer relay. |
+| **Persistence Layer** | `sync-server/persistence.js` | Hooks into `setPersistence` to encode/decode binary state to Upstash Redis. |
+
+### How It Works
+
+1. **Phase 3 (CRDTs)**: The Monaco editor content is bound to `y-monaco`. Typing translates into Yjs operations. The `y-websocket` server relays these binary blobs seamlessly.
+2. **Phase 4 (Awareness)**: User names and assigned colors are injected into the Yjs `awareness` local state. Other peers receive these updates and dynamically display floating carets and update the Sidebar online list.
+3. **Phase 5 (Persistence)**: The sync-server uses `ioredis` to listen for document changes. Every update is compressed into a binary blob via `Y.encodeStateAsUpdate` and saved to an Upstash Redis database. On server restart or empty room, `bindState` loads the blob via `applyUpdate`.
+
+### Features Working
+- ✅ Multi-user real-time typing with zero conflict locking
+- ✅ Coloured carets injected directly into Monaco's DOM
+- ✅ Real-time online user roster in the Sidebar
+- ✅ Uninterrupted WebSocket reconnection mechanisms
+- ✅ Serverless Redis document persistence (Upstash)
+
+---
+
 ## Development Phases Summary
 
 | Phase | Name | Timeline | Status |
 |---|---|---|---|
 | 1 | Setup + Monaco Editor | Day 1–2 | ✅ Complete |
 | 2 | Auth + Room Creation | Day 3–4 | ✅ Complete |
-| 3 | Yjs + y-websocket Sync | Day 5–7 | ⬜ Next |
-| 4 | Coloured Cursors + Presence | Week 2, Day 1–3 | ⬜ Pending |
-| 5 | Redis Persistence | Week 2, Day 4–5 | ⬜ Pending |
+| 3 | Yjs + y-websocket Sync | Day 5–7 | ✅ Complete |
+| 4 | Coloured Cursors + Presence | Week 2, Day 1–3 | ✅ Complete |
+| 5 | Redis Persistence | Week 2, Day 4–5 | ✅ Complete |
 | 6 | History Snapshots + Features | Week 2, Day 6–7 | ⬜ Pending |
 | 7 | Deploy (Vercel + Railway + Render) | Week 3 | ⬜ Pending |
 
@@ -433,4 +467,4 @@ docker-compose up
 
 ---
 
-*Last updated: Phase 2 complete — June 2026*
+*Last updated: Phase 5 complete — June 2026*
