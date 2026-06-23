@@ -1,0 +1,490 @@
+
+<style>
+*{box-sizing:border-box}
+.root{padding:1rem 0;font-family:var(--font-sans);color:var(--color-text-primary)}
+.tabs{display:flex;gap:2px;margin-bottom:1.5rem;border-bottom:.5px solid var(--color-border-tertiary);overflow-x:auto}
+.tab{padding:8px 13px;font-size:13px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.tab.active{color:#534AB7;border-bottom-color:#534AB7}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:500;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+.card-body{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin:0}
+.pill{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.ppl{background:#EEEDFE;color:#3C3489}
+.ptl{background:#E1F5EE;color:#085041}
+.pamb{background:#FAEEDA;color:#633806}
+.pbl{background:#E6F1FB;color:#0C447C}
+.pcr{background:#FAECE7;color:#712B13}
+.pgr{background:#F1EFE8;color:#444441}
+.slab{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px}
+.service-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.sbox{border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px}
+.sbox-name{font-size:13px;font-weight:500;margin:0 0 2px}
+.sbox-role{font-size:12px;color:var(--color-text-secondary);margin:0 0 5px}
+.sbox-why{font-size:11px;color:var(--color-text-tertiary);line-height:1.5;margin:0}
+.phase{border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:10px;overflow:hidden}
+.ph-head{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;background:var(--color-background-primary)}
+.ph-head:hover{background:var(--color-background-secondary)}
+.ph-num{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.ph-title{font-size:14px;font-weight:500;margin:0;flex:1}
+.ph-week{font-size:11px;color:var(--color-text-tertiary)}
+.ph-body{display:none;padding:0 16px 14px;border-top:.5px solid var(--color-border-tertiary)}
+.phase.open .ph-body{display:block}
+.tasks{margin:10px 0 0;padding:0;list-style:none}
+.tasks li{display:flex;gap:8px;font-size:13px;color:var(--color-text-secondary);margin-bottom:8px;line-height:1.5;align-items:flex-start}
+.tasks li i{font-size:14px;flex-shrink:0;margin-top:1px}
+.code{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:6px;padding:9px 12px;margin-top:9px;color:var(--color-text-secondary);line-height:1.7;white-space:pre;overflow-x:auto}
+.ask-btn{margin-top:10px;padding:6px 13px;border-radius:var(--border-radius-md);border:.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);font-size:12px;cursor:pointer}
+.ask-btn:hover{background:var(--color-background-secondary)}
+.iq{border-left:3px solid #AFA9EC;padding:10px 14px;margin-bottom:12px;border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;background:var(--color-background-secondary)}
+.iq .q{font-size:13px;font-weight:500;margin:0 0 5px}
+.iq .a{font-size:13px;color:var(--color-text-secondary);margin:0;line-height:1.6}
+.flow-step{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+.fnum{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;margin-top:1px}
+.fb{flex:1}
+.ft{font-size:13px;font-weight:500;margin:0 0 2px}
+.fd{font-size:12px;color:var(--color-text-secondary);margin:0;line-height:1.5}
+.folder{font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);line-height:1.8;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px}
+.fn{color:var(--color-text-primary);font-weight:500}
+.fc{color:var(--color-text-tertiary);font-style:italic}
+.num-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
+.numbox{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;text-align:center}
+.numval{font-size:20px;font-weight:500}
+.numlabel{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+</style>
+
+<div class="root">
+<h2 class="sr-only">Complete build guide for a real-time collaborative code editor with CRDTs</h2>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('overview',this)">Overview & HLD</div>
+  <div class="tab" onclick="switchTab('crdt',this)">CRDT deep dive</div>
+  <div class="tab" onclick="switchTab('tech',this)">Tech choices</div>
+  <div class="tab" onclick="switchTab('structure',this)">Project structure</div>
+  <div class="tab" onclick="switchTab('workflows',this)">Workflows</div>
+  <div class="tab" onclick="switchTab('phases',this)">Dev phases</div>
+  <div class="tab" onclick="switchTab('interview',this)">Interview prep</div>
+</div>
+
+<div id="tab-overview" class="panel active">
+  <div class="slab">What you're building</div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-code" aria-hidden="true" style="color:#534AB7;font-size:18px"></i> CollabCode — Google Docs for code</div>
+    <div class="card-body">Multiple users edit the same file simultaneously from different browsers. Edits appear in real-time for all users, cursors are tracked per user, conflicts are resolved automatically without any locking, and the document always converges to the same state. Syntax highlighting, language selection, and session history included.</div>
+  </div>
+
+  <div class="slab" style="margin-top:1.5rem">The core problem — why this is hard</div>
+  <div class="card">
+    <div class="card-title"><span class="pill pcr">Problem</span> Concurrent edits break naively</div>
+    <div class="card-body">User A and User B both start with "Hello". A inserts "World" at position 5. B deletes "Hello" at position 0. If you apply both edits sequentially using raw character positions, one edit corrupts the other. This is called the <strong>lost update problem</strong> and it's why you can't build this with a simple "send the diff via WebSocket" approach.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="pill ptl">Solution</span> CRDTs — conflict-free replicated data types</div>
+    <div class="card-body">A CRDT is a data structure designed so that concurrent operations always merge correctly without coordination. You use the <strong>Yjs library</strong> which implements a CRDT called Y.Doc. Instead of tracking character positions (which break under concurrency), Yjs tracks every character as a unique node with a logical clock ID. Merging always works, always produces the same result, regardless of order operations arrive.</div>
+  </div>
+
+  <div class="slab" style="margin-top:1.5rem">HLD — 4 layers</div>
+  <div class="card">
+    <div class="card-title"><span class="pill ppl">Layer 1</span> Client — React + Monaco Editor + Yjs</div>
+    <div class="card-body">Monaco is the same editor VS Code uses. Yjs binds to it via y-monaco so that every keystroke becomes a CRDT operation, not a raw string diff. Users see each other's cursors as coloured carets. The client connects to the server via WebSocket (y-websocket provider) and optionally persists to IndexedDB (y-indexeddb) so the doc loads offline too.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="pill ptl">Layer 2</span> Sync server — Node.js + y-websocket</div>
+    <div class="card-body">A thin WebSocket server that receives CRDT update messages from any client and broadcasts them to all other clients in the same room. It doesn't understand the document contents — it just relays binary Yjs update blobs. Optionally persists the latest doc state to Redis so new joiners don't have to replay all history.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="pill pamb">Layer 3</span> Persistence — PostgreSQL + Redis</div>
+    <div class="card-body">PostgreSQL stores room metadata, user accounts, and session history. Redis stores the latest serialised Y.Doc state per room (binary blob, updated on every change) so new users joining an existing session get the current state instantly without replaying all operations from the beginning.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="pill pbl">Layer 4</span> Awareness layer — cursor + presence</div>
+    <div class="card-body">Yjs has a built-in "awareness" protocol on top of WebSocket. Each client broadcasts its cursor position, username, and colour. All other clients receive this and Monaco renders coloured cursor decorations in real-time. This is separate from the document sync — awareness data is ephemeral and lost on disconnect.</div>
+  </div>
+</div>
+
+<div id="tab-crdt" class="panel">
+  <div class="slab">The concept — without the maths</div>
+  <div class="card">
+    <div class="card-title">Why character positions fail</div>
+    <div class="card-body">Imagine two users. Both see: <code>Helo</code>. User A inserts 'l' at index 2 → <code>Hello</code>. User B inserts '!' at index 4 → <code>Helo!</code>. If A's update arrives first and shifts characters right, B's index 4 now points to 'o' instead of end. B's '!' lands in the wrong place. Every simple diff-based approach has this flaw.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">How Yjs fixes it — unique IDs, not positions</div>
+    <div class="card-body">Instead of "insert at position 5", Yjs says "insert after the node with ID (clientA, clock:7)". IDs are stable — they don't shift when other characters are inserted. A character always knows what it comes after, regardless of what happened concurrently. When two clients insert at the same position simultaneously, a deterministic tiebreaker (client ID) decides order. Same inputs always produce the same result on every client.</div>
+  </div>
+
+  <div class="slab" style="margin-top:1rem">CRDT vs OT — the question interviewers love</div>
+  <div class="card">
+    <div class="card-title">Operational transformation (OT) — the older approach</div>
+    <div class="card-body">Google Docs used OT. The idea: transform an operation based on what happened concurrently. "Insert at 5" becomes "insert at 6" if someone inserted before position 5 first. Works, but requires a central server to order all operations. Hard to implement correctly, especially for rich text. Google has a team dedicated to it.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">CRDTs — the modern approach (what you're using)</div>
+    <div class="card-body">No central ordering needed. Each client applies operations independently and the state always converges. Yjs's algorithm (called YATA) is peer-to-peer friendly — works even offline. Slightly higher memory use than OT, but this is negligible for code files. Figma, Linear, and most modern collaborative tools use CRDTs.</div>
+  </div>
+
+  <div class="slab" style="margin-top:1rem">Yjs key concepts you must know</div>
+  <div class="card" style="padding:14px 16px">
+    <div class="flow-step">
+      <div class="fnum" style="background:#EEEDFE;color:#3C3489">1</div>
+      <div class="fb"><p class="ft">Y.Doc</p><p class="fd">The root shared document. Every client has one. They sync by exchanging binary update messages.</p></div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum" style="background:#EEEDFE;color:#3C3489">2</div>
+      <div class="fb"><p class="ft">Y.Text</p><p class="fd">A shared text type inside a Y.Doc. Monaco's y-monaco binding listens to this and applies changes. All concurrent edits go through Y.Text — never touch Monaco's model directly.</p></div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum" style="background:#EEEDFE;color:#3C3489">3</div>
+      <div class="fb"><p class="ft">Provider</p><p class="fd">How the Y.Doc syncs with others. y-websocket provider connects to your server and sends/receives update blobs. y-indexeddb provider persists to the browser so the doc survives page refresh offline.</p></div>
+    </div>
+    <div class="flow-step">
+      <div class="fnum" style="background:#EEEDFE;color:#3C3489">4</div>
+      <div class="fb"><p class="ft">Awareness</p><p class="fd">Yjs's ephemeral state layer. Use it for cursor positions, usernames, online status. Awareness data is NOT part of the document and NOT persisted — it's just broadcast to current peers.</p></div>
+    </div>
+    <div class="code">import * as Y from 'yjs'
+import { WebsocketProvider } from 'y-websocket'
+import { MonacoBinding } from 'y-monaco'
+
+const ydoc = new Y.Doc()
+const ytext = ydoc.getText('code')          // shared text
+
+const provider = new WebsocketProvider(
+  'ws://localhost:1234', 'room-abc', ydoc
+)
+
+// Bind to Monaco editor
+const binding = new MonacoBinding(
+  ytext, editor.getModel(), new Set([editor]), provider.awareness
+)
+
+// Set your cursor colour + name
+provider.awareness.setLocalStateField('user', {
+  name: 'Arjun', color: '#F08040'
+})</div>
+    <button class="ask-btn" onclick="sendPrompt('Show me the full Y.Doc setup with awareness, cursor colours, and Monaco binding ↗')">Show me the full code ↗</button>
+  </div>
+</div>
+
+<div id="tab-tech" class="panel">
+  <div class="slab">Every technology and why</div>
+  <div class="service-grid">
+    <div class="sbox"><i class="ti ti-brand-react" aria-hidden="true" style="font-size:20px;color:#378ADD;margin-bottom:6px"></i><p class="sbox-name">React + Vite</p><p class="sbox-role">Frontend framework</p><p class="sbox-why">You know it. Component model maps cleanly to editor, sidebar, and toolbar.</p></div>
+    <div class="sbox"><i class="ti ti-code" aria-hidden="true" style="font-size:20px;color:#534AB7;margin-bottom:6px"></i><p class="sbox-name">Monaco Editor</p><p class="sbox-role">Code editor</p><p class="sbox-why">Same engine as VS Code. Built-in syntax highlighting for 50+ languages, TypeScript IntelliSense, themes. Massive wow factor — looks professional instantly.</p></div>
+    <div class="sbox"><i class="ti ti-arrows-right-left" aria-hidden="true" style="font-size:20px;color:#1D9E75;margin-bottom:6px"></i><p class="sbox-name">Yjs + y-monaco</p><p class="sbox-role">CRDT engine</p><p class="sbox-why">The industry standard CRDT library. y-monaco is the official Monaco binding. Used by Notion, Gitpod, and dozens of editors.</p></div>
+    <div class="sbox"><i class="ti ti-plug" aria-hidden="true" style="font-size:20px;color:#444441;margin-bottom:6px"></i><p class="sbox-name">y-websocket server</p><p class="sbox-role">Sync server</p><p class="sbox-why">Official Yjs WebSocket server. Handles rooms, update relaying, and optional persistence. Saves you writing the sync logic yourself.</p></div>
+    <div class="sbox"><i class="ti ti-brand-nodejs" aria-hidden="true" style="font-size:20px;color:#3B6D11;margin-bottom:6px"></i><p class="sbox-name">Node.js + Express</p><p class="sbox-role">REST API</p><p class="sbox-why">Auth, room management, session history. You already know it.</p></div>
+    <div class="sbox"><i class="ti ti-bolt" aria-hidden="true" style="font-size:20px;color:#EF9F27;margin-bottom:6px"></i><p class="sbox-name">Redis (Upstash)</p><p class="sbox-role">Doc state cache</p><p class="sbox-why">Stores the serialised Y.Doc binary per room. New users joining get current state instantly — no full history replay.</p></div>
+    <div class="sbox"><i class="ti ti-database" aria-hidden="true" style="font-size:20px;color:#185FA5;margin-bottom:6px"></i><p class="sbox-name">PostgreSQL (Supabase)</p><p class="sbox-role">Persistence</p><p class="sbox-why">Rooms, users, session snapshots, history. Free tier is plenty for a portfolio project.</p></div>
+    <div class="sbox"><i class="ti ti-brand-docker" aria-hidden="true" style="font-size:20px;color:#378ADD;margin-bottom:6px"></i><p class="sbox-name">Docker Compose</p><p class="sbox-role">Local dev</p><p class="sbox-why">Runs y-websocket server + Redis together locally. Same config deploys to VPS.</p></div>
+    <div class="sbox"><i class="ti ti-device-laptop" aria-hidden="true" style="font-size:20px;color:#993556;margin-bottom:6px"></i><p class="sbox-name">@monaco-editor/react</p><p class="sbox-role">Monaco wrapper</p><p class="sbox-why">Official React wrapper. Handles Monaco's complicated loading lifecycle so you don't have to.</p></div>
+  </div>
+</div>
+
+<div id="tab-structure" class="panel">
+  <div class="slab">Folder structure</div>
+  <div class="folder"><span class="fn">collab-editor/</span>
+├── <span class="fn">client/</span>                    <span class="fc"># React + Vite frontend</span>
+│   ├── <span class="fn">src/</span>
+│   │   ├── <span class="fn">components/</span>
+│   │   │   ├── Editor.jsx              <span class="fc"># Monaco + Yjs binding</span>
+│   │   │   ├── CollabCursors.jsx       <span class="fc"># coloured cursor decorations</span>
+│   │   │   ├── Sidebar.jsx             <span class="fc"># online users list</span>
+│   │   │   ├── Toolbar.jsx             <span class="fc"># language select, share button</span>
+│   │   │   └── HistoryPanel.jsx        <span class="fc"># past session snapshots</span>
+│   │   ├── <span class="fn">hooks/</span>
+│   │   │   ├── useYjs.js               <span class="fc"># Y.Doc + provider setup</span>
+│   │   │   ├── useAwareness.js         <span class="fc"># cursor + presence</span>
+│   │   │   └── useMonaco.js            <span class="fc"># Monaco instance ref</span>
+│   │   ├── <span class="fn">pages/</span>
+│   │   │   ├── Home.jsx                <span class="fc"># create / join room</span>
+│   │   │   └── Room.jsx                <span class="fc"># main editor view</span>
+│   │   └── App.jsx
+│   └── package.json
+│
+├── <span class="fn">server/</span>                    <span class="fc"># Node.js REST API</span>
+│   ├── <span class="fn">routes/</span>
+│   │   ├── auth.js                     <span class="fc"># register, login, JWT</span>
+│   │   └── rooms.js                    <span class="fc"># create room, get history</span>
+│   ├── db.js                           <span class="fc"># PostgreSQL connection</span>
+│   ├── redis.js                        <span class="fc"># Redis client</span>
+│   └── index.js
+│
+├── <span class="fn">sync-server/</span>               <span class="fc"># y-websocket sync server</span>
+│   ├── server.js                       <span class="fc"># custom y-websocket setup</span>
+│   └── persistence.js                  <span class="fc"># save/load Y.Doc to Redis</span>
+│
+├── docker-compose.yml
+└── .env</div>
+
+  <div class="slab" style="margin-top:1.5rem">Database schema</div>
+  <div class="code">CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  color TEXT DEFAULT '#F08040'   -- cursor colour
+);
+
+CREATE TABLE rooms (
+  id TEXT PRIMARY KEY,           -- short nanoid, used as room URL
+  name TEXT,
+  language TEXT DEFAULT 'javascript',
+  owner_id UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE snapshots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id TEXT REFERENCES rooms(id),
+  content TEXT,                  -- full code text at that moment
+  saved_at TIMESTAMPTZ DEFAULT now(),
+  saved_by UUID REFERENCES users(id)
+);</div>
+</div>
+
+<div id="tab-workflows" class="panel">
+  <div class="slab">Workflow 1 — user joins a room and gets current doc state</div>
+  <div class="card" style="padding:14px 16px">
+    <div class="flow-step"><div class="fnum" style="background:#EEEDFE;color:#3C3489">1</div><div class="fb"><p class="ft">User opens /room/abc-123</p><p class="fd">React renders Room.jsx. useYjs hook fires — creates a new Y.Doc and connects a WebsocketProvider to ws://sync-server/abc-123.</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#EEEDFE;color:#3C3489">2</div><div class="fb"><p class="ft">Sync server checks Redis for existing state</p><p class="fd">If a Y.Doc state blob exists for room abc-123 in Redis, the server sends it immediately as a "sync step 1" message. The client applies it and the editor fills with the current document content instantly.</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#EEEDFE;color:#3C3489">3</div><div class="fb"><p class="ft">MonacoBinding attaches</p><p class="fd">Once the Y.Doc has initial state, MonacoBinding links Y.Text to Monaco's model. From this point, every keystroke in Monaco creates a Y.Text operation, and every remote operation updates Monaco.</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#EEEDFE;color:#3C3489">4</div><div class="fb"><p class="ft">Awareness broadcast</p><p class="fd">Client sets its cursor state (username, colour, cursor position). All other connected clients receive it and render a coloured cursor decoration in Monaco at the correct position.</p></div></div>
+  </div>
+
+  <div class="slab" style="margin-top:1rem">Workflow 2 — concurrent edit (the core CRDT flow)</div>
+  <div class="card" style="padding:14px 16px">
+    <div class="flow-step"><div class="fnum" style="background:#E1F5EE;color:#085041">1</div><div class="fb"><p class="ft">User A types 'x' at position 3</p><p class="fd">y-monaco intercepts the Monaco change event. Creates a Y.Text insert operation with a unique ID (clientA, clock:15). Applies it locally to the Y.Doc immediately — no waiting. Monaco shows 'x' instantly.</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#E1F5EE;color:#085041">2</div><div class="fb"><p class="ft">Y.Doc serialises the update</p><p class="fd">Yjs encodes the operation as a compact binary blob (typically 20–50 bytes for a single character). The WebsocketProvider sends this blob to the sync server.</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#E1F5EE;color:#085041">3</div><div class="fb"><p class="ft">Sync server broadcasts to all room members</p><p class="fd">The sync server receives the binary blob and forwards it to every other WebSocket connection in room abc-123. It does not parse the blob — just relays bytes.</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#E1F5EE;color:#085041">4</div><div class="fb"><p class="ft">User B's Y.Doc applies the remote update</p><p class="fd">Yjs merges the incoming operation using CRDT rules. If User B also typed at the same position simultaneously, Yjs resolves the conflict deterministically. Both documents end up identical. Monaco re-renders.</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#E1F5EE;color:#085041">5</div><div class="fb"><p class="ft">Redis updated</p><p class="fd">Sync server serialises the full Y.Doc state and writes it to Redis under key room:abc-123. New joiners get this state immediately.</p></div></div>
+  </div>
+
+  <div class="slab" style="margin-top:1rem">Workflow 3 — session snapshot (history feature)</div>
+  <div class="card" style="padding:14px 16px">
+    <div class="flow-step"><div class="fnum" style="background:#FAEEDA;color:#633806">1</div><div class="fb"><p class="ft">User clicks "Save snapshot"</p><p class="fd">Client calls POST /api/rooms/:id/snapshots with the current plain text content (ytext.toString()).</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#FAEEDA;color:#633806">2</div><div class="fb"><p class="ft">Server saves to PostgreSQL</p><p class="fd">The snapshot row is inserted with the full code text, timestamp, and user ID. Snapshots are read-only historical records — you can view them but not restore destructively.</p></div></div>
+    <div class="flow-step"><div class="fnum" style="background:#FAEEDA;color:#633806">3</div><div class="fb"><p class="ft">History panel shows all snapshots</p><p class="fd">GET /api/rooms/:id/snapshots returns all saved snapshots. User can click any to view the code at that point in a read-only Monaco instance side-by-side with the live editor.</p></div></div>
+  </div>
+</div>
+
+<div id="tab-phases" class="panel">
+  <div class="slab">Development execution — click each phase</div>
+
+  <div class="phase open" onclick="this.classList.toggle('open')">
+    <div class="ph-head">
+      <div class="ph-num" style="background:#EEEDFE;color:#3C3489">1</div>
+      <p class="ph-title">Setup + Monaco editor working</p>
+      <span class="ph-week">Day 1–2</span>
+    </div>
+    <div class="ph-body">
+      <ul class="tasks">
+        <li><i class="ti ti-terminal" style="color:var(--color-text-secondary)"></i>Create React app with Vite, install Monaco</li>
+        <li><i class="ti ti-terminal" style="color:var(--color-text-secondary)"></i>Get Monaco rendering with JS syntax highlighting — this alone looks impressive</li>
+        <li><i class="ti ti-terminal" style="color:var(--color-text-secondary)"></i>Add language selector dropdown (javascript, python, go, rust etc.)</li>
+        <li><i class="ti ti-terminal" style="color:var(--color-text-secondary)"></i>Add VS Code dark theme</li>
+      </ul>
+      <div class="code">npm install @monaco-editor/react
+npm install yjs y-websocket y-monaco y-indexeddb</div>
+      <div class="code">// Editor.jsx — Monaco renders, no collab yet
+import Editor from '@monaco-editor/react'
+
+export default function CodeEditor() {
+  return (
+    &lt;Editor
+      height="100vh"
+      defaultLanguage="javascript"
+      theme="vs-dark"
+      options={{ fontSize: 14, minimap: { enabled: false } }}
+    /&gt;
+  )
+}</div>
+      <p style="font-size:12px;color:var(--color-text-tertiary);margin:8px 0 0">Goal: a beautiful working code editor in the browser. Screenshot this for your resume.</p>
+    </div>
+  </div>
+
+  <div class="phase" onclick="this.classList.toggle('open')">
+    <div class="ph-head">
+      <div class="ph-num" style="background:#EEEDFE;color:#3C3489">2</div>
+      <p class="ph-title">Auth + room creation</p>
+      <span class="ph-week">Day 3–4</span>
+    </div>
+    <div class="ph-body">
+      <ul class="tasks">
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>Node.js + Express: POST /auth/register, POST /auth/login (JWT)</li>
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>POST /rooms — generates a short room ID (use nanoid), saves to PG</li>
+        <li><i class="ti ti-layout" style="color:var(--color-text-secondary)"></i>Home page: "Create room" button → generates ID → navigate to /room/:id</li>
+        <li><i class="ti ti-layout" style="color:var(--color-text-secondary)"></i>"Join room" — enter room ID or paste shareable link</li>
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>Store JWT in localStorage, pass as query param to WebSocket later</li>
+      </ul>
+      <div class="code">npm install nanoid bcryptjs jsonwebtoken</div>
+      <button class="ask-btn" onclick="event.stopPropagation();sendPrompt('Write the Express auth routes for the collab editor — register, login, JWT middleware ↗')">Show me the auth code ↗</button>
+    </div>
+  </div>
+
+  <div class="phase" onclick="this.classList.toggle('open')">
+    <div class="ph-head">
+      <div class="ph-num" style="background:#E1F5EE;color:#085041">3</div>
+      <p class="ph-title">Yjs + y-websocket sync server</p>
+      <span class="ph-week">Week 1, Day 5–7</span>
+    </div>
+    <div class="ph-body">
+      <ul class="tasks">
+        <li><i class="ti ti-server" style="color:var(--color-text-secondary)"></i>Set up y-websocket server as a separate Node process (port 1234)</li>
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>Connect WebsocketProvider in the frontend to ws://localhost:1234/room-id</li>
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>Bind Y.Text to Monaco model using MonacoBinding</li>
+        <li><i class="ti ti-check" style="color:var(--color-text-success)"></i>Test: open two browser tabs to the same room URL, type in one — appears in the other</li>
+      </ul>
+      <div class="code">// sync-server/server.js
+const { WebsocketServer } = require('y-websocket/bin/utils')
+const http = require('http')
+
+const server = http.createServer()
+const wss = new WebsocketServer({ server })
+server.listen(1234, () => console.log('Sync server on :1234'))</div>
+      <div class="code">// client: hooks/useYjs.js
+import * as Y from 'yjs'
+import { WebsocketProvider } from 'y-websocket'
+import { IndexeddbPersistence } from 'y-indexeddb'
+
+export function useYjs(roomId) {
+  const ydoc = useMemo(() => new Y.Doc(), [])
+  const ytext = useMemo(() => ydoc.getText('code'), [ydoc])
+
+  useEffect(() => {
+    const wsProvider = new WebsocketProvider(
+      'ws://localhost:1234', roomId, ydoc
+    )
+    const idbProvider = new IndexeddbPersistence(roomId, ydoc)
+    return () => { wsProvider.destroy(); idbProvider.destroy() }
+  }, [roomId, ydoc])
+
+  return { ydoc, ytext }
+}</div>
+      <button class="ask-btn" onclick="event.stopPropagation();sendPrompt('Write the full MonacoBinding setup with useYjs hook and Editor.jsx for the collab editor ↗')">Show me the full binding code ↗</button>
+    </div>
+  </div>
+
+  <div class="phase" onclick="this.classList.toggle('open')">
+    <div class="ph-head">
+      <div class="ph-num" style="background:#E1F5EE;color:#085041">4</div>
+      <p class="ph-title">Coloured cursors + presence (awareness)</p>
+      <span class="ph-week">Week 2, Day 1–3</span>
+    </div>
+    <div class="ph-body">
+      <ul class="tasks">
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>Set awareness state with username, colour, cursor position on every Monaco cursor move</li>
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>Subscribe to awareness changes — render Monaco cursor decorations for each remote user</li>
+        <li><i class="ti ti-layout" style="color:var(--color-text-secondary)"></i>Sidebar: show online users list with their assigned colours and usernames</li>
+        <li><i class="ti ti-layout" style="color:var(--color-text-secondary)"></i">Show user initials badge at their cursor position in the editor</li>
+        <li><i class="ti ti-check" style="color:var(--color-text-success)"></i>Test: three tabs open, move cursor in each — other tabs show coloured carets</li>
+      </ul>
+      <div class="code">// useAwareness.js
+provider.awareness.setLocalStateField('user', {
+  name: currentUser.username,
+  color: currentUser.color,
+})
+
+provider.awareness.on('change', () => {
+  const states = Array.from(provider.awareness.getStates().entries())
+  // map to Monaco editor.deltaDecorations() calls
+})</div>
+    </div>
+  </div>
+
+  <div class="phase" onclick="this.classList.toggle('open')">
+    <div class="ph-head">
+      <div class="ph-num" style="background:#FAEEDA;color:#633806">5</div>
+      <p class="ph-title">Redis persistence + new joiner state</p>
+      <span class="ph-week">Week 2, Day 4–5</span>
+    </div>
+    <div class="ph-body">
+      <ul class="tasks">
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>On every Y.Doc update: serialise with Y.encodeStateAsUpdate(doc) and SET in Redis</li>
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>On new WebSocket connection: GET from Redis and send as initial sync message</li>
+        <li><i class="ti ti-check" style="color:var(--color-text-success)"></i>Test: type in room, close all tabs, reopen — document is restored from Redis</li>
+      </ul>
+      <div class="code">// sync-server/persistence.js
+const { encodeStateAsUpdate, applyUpdate } = require('yjs')
+
+async function saveDoc(roomId, ydoc) {
+  const state = Buffer.from(encodeStateAsUpdate(ydoc))
+  await redis.set(`room:${roomId}`, state)
+}
+
+async function loadDoc(roomId, ydoc) {
+  const state = await redis.getBuffer(`room:${roomId}`)
+  if (state) applyUpdate(ydoc, state)
+}</div>
+    </div>
+  </div>
+
+  <div class="phase" onclick="this.classList.toggle('open')">
+    <div class="ph-head">
+      <div class="ph-num" style="background:#FAECE7;color:#712B13">6</div>
+      <p class="ph-title">History snapshots + extra features</p>
+      <span class="ph-week">Week 2, Day 6–7</span>
+    </div>
+    <div class="ph-body">
+      <ul class="tasks">
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>POST /rooms/:id/snapshots — save ytext.toString() to PostgreSQL</li>
+        <li><i class="ti ti-layout" style="color:var(--color-text-secondary)"></i>History panel — list snapshots, click to view in read-only Monaco</li>
+        <li><i class="ti ti-layout" style="color:var(--color-text-secondary)"></i>Share button — copy room URL to clipboard, show QR code</li>
+        <li><i class="ti ti-code" style="color:var(--color-text-secondary)"></i>Download button — download current code as a .js / .py / .go file</li>
+        <li><i class="ti ti-layout" style="color:var(--color-text-secondary)"></i>Run code (optional) — send to a sandboxed Judge0 API, show output panel</li>
+      </ul>
+      <button class="ask-btn" onclick="event.stopPropagation();sendPrompt('How do I integrate Judge0 API to run code in the collaborative editor? ↗')">Add code execution ↗</button>
+    </div>
+  </div>
+
+  <div class="phase" onclick="this.classList.toggle('open')">
+    <div class="ph-head">
+      <div class="ph-num" style="background:#E6F1FB;color:#0C447C">7</div>
+      <p class="ph-title">Deploy — Vercel + Railway/Render</p>
+      <span class="ph-week">Week 3</span>
+    </div>
+    <div class="ph-body">
+      <ul class="tasks">
+        <li><i class="ti ti-cloud" style="color:var(--color-text-secondary)"></i>Deploy React frontend to Vercel (free, automatic from GitHub)</li>
+        <li><i class="ti ti-cloud" style="color:var(--color-text-secondary)"></i>Deploy REST API to Render.com free tier</li>
+        <li><i class="ti ti-cloud" style="color:var(--color-text-secondary)"></i>Deploy sync server to Railway.app (supports WebSockets, free tier available)</li>
+        <li><i class="ti ti-bolt" style="color:var(--color-text-secondary)"></i>Upstash Redis for persistence (free tier)</li>
+        <li><i class="ti ti-database" style="color:var(--color-text-secondary)"></i>Supabase PostgreSQL (free tier)</li>
+        <li><i class="ti ti-check" style="color:var(--color-text-success)"></i>Total cost: ₹0</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div id="tab-interview" class="panel">
+  <div class="slab">Questions you will definitely be asked</div>
+  <div class="iq"><p class="q">"Walk me through your project."</p><p class="a">Say: "I built a real-time collaborative code editor — think Google Docs but for code, using Monaco which is the VS Code editor. The interesting problem was handling concurrent edits. If two people type at the same position simultaneously, naive string diffing corrupts the document. I solved this using Yjs, which implements a CRDT called YATA — instead of tracking character positions, every character gets a unique ID and knows what it comes after. Concurrent edits always merge correctly, no locking needed, and the document converges to the same state on every client."</p></div>
+  <div class="iq"><p class="q">"What is a CRDT and how does it work?"</p><p class="a">Say: "CRDT stands for conflict-free replicated data type. It's a data structure designed so that concurrent operations always merge correctly without coordination. In Yjs specifically, each character isn't stored at a position — it's stored as a node with a unique ID (clientId + logical clock) that points to what it comes after. When two clients insert at the same spot simultaneously, the CRDT uses a deterministic tiebreaker — the client ID — to decide order. Any client that applies both operations in any order ends up with the same result. It's mathematically guaranteed to converge."</p></div>
+  <div class="iq"><p class="q">"CRDT vs Operational Transformation — what's the difference?"</p><p class="a">Say: "OT is the older approach — Google Docs uses it. You transform each operation based on what happened concurrently. 'Insert at 5' becomes 'Insert at 6' if someone inserted before position 5 first. It works but requires a central server to order all operations. CRDTs don't need central ordering — each client applies operations independently and the state always converges. Yjs is peer-to-peer friendly, works offline, and is what most modern tools like Figma and Linear use."</p></div>
+  <div class="iq"><p class="q">"How do you handle cursor positions for other users?"</p><p class="a">Say: "Yjs has a built-in awareness protocol that's separate from document sync. It's a lightweight pub-sub layer for ephemeral state — things that aren't part of the document. Each client broadcasts its cursor position, username, and colour. Other clients receive this and I use Monaco's deltaDecorations API to render a coloured cursor caret at that position. Awareness data is not persisted — it disappears when the user disconnects."</p></div>
+  <div class="iq"><p class="q">"What happens when a user joins a room that already has content?"</p><p class="a">Say: "The sync server stores the full serialised Y.Doc state in Redis on every update. When a new WebSocket connection opens for a room, the server fetches the binary blob from Redis and sends it as the initial sync message. Yjs's applyUpdate merges this state into the client's empty Y.Doc, populating the editor instantly. The client doesn't need to replay all historical operations — just the current state snapshot."</p></div>
+  <div class="iq"><p class="q">"What would you change to scale this to 10,000 concurrent users?"</p><p class="a">Say: "Three things. First, the sync server would need to run as multiple instances behind a load balancer with sticky sessions — clients in the same room must hit the same server, or we need a message broker like Redis pub-sub to relay updates across server instances. Second, instead of storing the full Y.Doc in Redis on every keystroke, I'd debounce it to every 5 seconds. Third, for very large documents, I'd switch from the full-state snapshot approach to delta encoding — only storing and sending the operations that happened since the last known client state."</p></div>
+
+  <div class="slab" style="margin-top:1.5rem">Numbers to know cold</div>
+  <div class="num-grid">
+    <div class="numbox"><div class="numval" style="color:#534AB7">~30 bytes</div><div class="numlabel">Yjs update per keystroke</div></div>
+    <div class="numbox"><div class="numval" style="color:#0F6E56">&lt;50ms</div><div class="numlabel">Edit → remote render</div></div>
+    <div class="numbox"><div class="numval" style="color:#854F0B">50+</div><div class="numlabel">Monaco languages</div></div>
+    <div class="numbox"><div class="numval" style="color:#185FA5">0ms</div><div class="numlabel">Local edit latency (optimistic)</div></div>
+    <div class="numbox"><div class="numval" style="color:#712B13">3</div><div class="numlabel">Yjs providers used</div></div>
+  </div>
+
+  <div class="slab" style="margin-top:1.5rem">The live demo move</div>
+  <div class="card">
+    <div class="card-body">Open your deployed link during the interview. Share it with the interviewer on their phone or a second browser. Type simultaneously. Show coloured cursors. Say: "Each character you see appearing here went through Yjs's CRDT merge on both clients — no server coordination, guaranteed consistency." Nobody else in the candidate pool is demoing a live CRDT in an interview.</div>
+  </div>
+</div>
+</div>
+
+<script>
+function switchTab(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
