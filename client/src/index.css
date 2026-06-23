@@ -8,19 +8,19 @@
 /* --- CSS Custom Properties --- */
 :root {
   /* Colors — curated dark palette */
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-tertiary: #1a1a28;
-  --bg-elevated: #1e1e2e;
-  --bg-hover: #252538;
-  --bg-active: #2a2a42;
+  --bg-primary: #0b0f19;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --bg-elevated: #111827;
+  --bg-hover: #374151;
+  --bg-active: #4b5563;
 
-  /* Accent — purple/indigo gradient palette */
-  --accent-primary: #7c6aef;
-  --accent-secondary: #9d8af5;
-  --accent-muted: #534ab7;
-  --accent-glow: rgba(124, 106, 239, 0.15);
-  --accent-gradient: linear-gradient(135deg, #7c6aef 0%, #a78bfa 50%, #c4b5fd 100%);
+  /* Accent — Ocean blue gradient palette */
+  --accent-primary: #0ea5e9;
+  --accent-secondary: #38bdf8;
+  --accent-muted: #0284c7;
+  --accent-glow: rgba(14, 165, 233, 0.15);
+  --accent-gradient: linear-gradient(135deg, #2563eb 0%, #0ea5e9 50%, #2dd4bf 100%);
 
   /* Status colors */
   --color-success: #34d399;
@@ -31,19 +31,19 @@
   /* Text */
   --text-primary: #e8e6f0;
   --text-secondary: #9896a8;
-  --text-tertiary: #6b697a;
-  --text-accent: #a78bfa;
+  --text-tertiary: #6b7280;
+  --text-accent: #38bdf8;
 
   /* Borders */
   --border-primary: rgba(255, 255, 255, 0.08);
   --border-secondary: rgba(255, 255, 255, 0.05);
-  --border-accent: rgba(124, 106, 239, 0.3);
+  --border-accent: rgba(14, 165, 233, 0.3);
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(124, 106, 239, 0.15);
+  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.15);
 
   /* Glass */
   --glass-bg: rgba(18, 18, 26, 0.8);
@@ -116,7 +116,7 @@ body {
 
 /* --- Selection --- */
 ::selection {
-  background: rgba(124, 106, 239, 0.3);
+  background: rgba(14, 165, 233, 0.3);
   color: var(--text-primary);
 }
 
@@ -206,7 +206,7 @@ body {
 
 .btn-primary:hover {
   animation: gradientShift 3s ease infinite;
-  box-shadow: 0 0 30px rgba(124, 106, 239, 0.3);
+  box-shadow: 0 0 30px rgba(14, 165, 233, 0.3);
 }
 
 .btn-ghost {
