@@ -1,5 +1,7 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import MonacoEditor from '@monaco-editor/react'
+import { MonacoBinding } from 'y-monaco'
+import { useYjs } from '../hooks/useYjs'
 
 const LANGUAGES = [
   { id: 'javascript', label: 'JavaScript', ext: '.js' },
@@ -79,13 +81,24 @@ console.log(greet(user));
 `,
 }
 
-export default function Editor({ language, onLanguageChange }) {
+export default function Editor({ roomId, language, onLanguageChange }) {
   const editorRef = useRef(null)
+  const bindingRef = useRef(null)
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 })
   const [wordCount, setWordCount] = useState(0)
+  
+  const { ydoc, ytext, synced } = useYjs(roomId)
 
   const handleEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor
+
+    // Bind Yjs to Monaco
+    bindingRef.current = new MonacoBinding(
+      ytext,
+      editor.getModel(),
+      new Set([editor]),
+      null // Awareness will be added in Phase 4
+    )
 
     // Track cursor position
     editor.onDidChangeCursorPosition((e) => {
@@ -109,6 +122,15 @@ export default function Editor({ language, onLanguageChange }) {
 
     // Focus the editor
     editor.focus()
+  }, [ytext])
+
+  // Cleanup binding on unmount
+  useEffect(() => {
+    return () => {
+      if (bindingRef.current) {
+        bindingRef.current.destroy()
+      }
+    }
   }, [])
 
   const getDefaultValue = useCallback(() => {
@@ -157,6 +179,7 @@ export default function Editor({ language, onLanguageChange }) {
             showFoldingControls: 'mouseover',
             links: true,
             colorDecorators: true,
+            readOnly: !synced, // Disable editing until initial sync is complete
           }}
           loading={
             <div style={{
@@ -178,7 +201,7 @@ export default function Editor({ language, onLanguageChange }) {
                 borderRadius: '50%',
                 animation: 'spin 0.8s linear infinite',
               }} />
-              Loading editor...
+              Connecting to sync server...
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           }
@@ -189,5 +212,6 @@ export default function Editor({ language, onLanguageChange }) {
     wordCount,
     editorRef,
     languages: LANGUAGES,
+    synced,
   }
 }

@@ -39,7 +39,8 @@ export default function Room() {
     cursorPosition,
     wordCount,
     languages,
-  } = Editor({ language, onLanguageChange: setLanguage })
+    synced,
+  } = Editor({ roomId, language, onLanguageChange: setLanguage })
 
   if (loading) {
     return (
@@ -100,7 +101,7 @@ export default function Room() {
         language={language}
         cursorPosition={cursorPosition}
         wordCount={wordCount}
-        connected={false}
+        connected={synced}
         roomId={roomId}
       />
     </div>
