@@ -1,6 +1,20 @@
+require('dotenv').config()
 const WebSocket = require('ws')
 const http = require('http')
-const setupWSConnection = require('y-websocket/bin/utils').setupWSConnection
+const { setupWSConnection, setPersistence } = require('y-websocket/bin/utils')
+const { saveDoc, loadDoc } = require('./persistence')
+
+// Hook up Yjs persistence to Redis
+setPersistence({
+  bindState: async (docName, ydoc) => {
+    // Called when a new room is created/loaded
+    await loadDoc(docName, ydoc)
+  },
+  writeState: async (docName, ydoc) => {
+    // Called whenever a document changes
+    await saveDoc(docName, ydoc)
+  }
+})
 
 const server = http.createServer((request, response) => {
   response.writeHead(200, { 'Content-Type': 'text/plain' })

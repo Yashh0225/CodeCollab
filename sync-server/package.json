@@ -11,6 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dotenv": "^17.4.2",
+    "ioredis": "^5.11.1",
     "ws": "^8.21.0",
     "y-websocket": "^1.5.0",
     "yjs": "^13.6.31"
