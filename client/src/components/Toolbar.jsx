@@ -61,9 +61,14 @@ export default function Toolbar({
   roomId,
   onNavigateHome,
 }) {
+  const [copied, setCopied] = useState(false)
+
   const handleCopyRoomLink = () => {
     const url = `${window.location.origin}/room/${roomId || 'demo'}`
-    navigator.clipboard.writeText(url).catch(() => {})
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {})
   }
 
   return (
@@ -76,10 +81,39 @@ export default function Toolbar({
 
       <div className="toolbar-divider" />
 
-      {/* Room badge */}
-      <div className="room-badge">
-        <span className="room-badge-icon">⚡</span>
-        <span>{roomId || 'demo-room'}</span>
+      {/* Room badge & Invite */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="room-badge" style={{ userSelect: 'all' }}>
+          <span className="room-badge-icon" style={{ userSelect: 'none', marginRight: '4px' }}>⚡</span>
+          <span style={{ userSelect: 'all' }}>{roomId || 'demo-room'}</span>
+        </div>
+        <button 
+          onClick={handleCopyRoomLink}
+          style={{
+            background: copied ? 'rgba(45, 212, 191, 0.15)' : 'var(--accent-glow)',
+            color: copied ? '#2dd4bf' : 'var(--accent-secondary)',
+            border: '1px solid',
+            borderColor: copied ? 'rgba(45, 212, 191, 0.3)' : 'var(--border-accent)',
+            padding: '4px 12px',
+            borderRadius: '100px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          {copied ? 'Copied!' : (
+            <>
+              <div style={{ width: '14px', height: '14px', display: 'flex' }}>
+                <Icons.Copy />
+              </div> 
+              Invite
+            </>
+          )}
+        </button>
       </div>
 
       {/* Language selector */}
