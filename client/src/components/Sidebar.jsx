@@ -1,9 +1,14 @@
-/* eslint-disable react/prop-types */
+import { useAwareness } from '../hooks/useAwareness'
 
-export default function Sidebar({ isOpen, roomInfo, currentUser }) {
+export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
+  const onlineUsers = useAwareness(provider)
+
   if (!isOpen) return null
 
-  const user = currentUser || { username: 'Guest', color: '#7c6aef' }
+  // Ensure current user is included if offline/no-provider
+  const usersToDisplay = onlineUsers.length > 0 
+    ? onlineUsers 
+    : [currentUser || { username: 'Guest', color: '#7c6aef' }]
 
   return (
     <div className={`sidebar ${isOpen ? '' : 'collapsed'}`}>
@@ -16,26 +21,31 @@ export default function Sidebar({ isOpen, roomInfo, currentUser }) {
           padding: '2px 8px',
           borderRadius: '10px',
         }}>
-          1 online
+          {usersToDisplay.length} online
         </span>
       </div>
 
       <div className="sidebar-content">
         <div className="user-list">
-          <div className="user-item">
-            <div
-              className="user-avatar"
-              style={{ background: user.color }}
-            >
-              {user.username.charAt(0).toUpperCase()}
-              <div className="online-dot" />
-            </div>
-            <div>
-              <div className="user-name">{user.username}</div>
-              <div className="user-status">Editing</div>
-            </div>
-            <span className="user-badge">You</span>
-          </div>
+          {usersToDisplay.map((u, i) => {
+            const isMe = currentUser && u.name === currentUser.username
+            return (
+              <div className="user-item" key={`${u.name}-${i}`}>
+                <div
+                  className="user-avatar"
+                  style={{ background: u.color || '#7c6aef' }}
+                >
+                  {(u.name || 'G').charAt(0).toUpperCase()}
+                  <div className="online-dot" />
+                </div>
+                <div>
+                  <div className="user-name">{u.name}</div>
+                  <div className="user-status">Editing</div>
+                </div>
+                {isMe && <span className="user-badge">You</span>}
+              </div>
+            )
+          })}
         </div>
 
         {/* Room info section */}

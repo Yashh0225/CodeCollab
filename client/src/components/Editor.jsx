@@ -87,7 +87,7 @@ export default function Editor({ roomId, language, onLanguageChange }) {
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 })
   const [wordCount, setWordCount] = useState(0)
   
-  const { ydoc, ytext, synced } = useYjs(roomId)
+  const { ydoc, ytext, synced, provider } = useYjs(roomId)
 
   const handleEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor
@@ -97,7 +97,7 @@ export default function Editor({ roomId, language, onLanguageChange }) {
       ytext,
       editor.getModel(),
       new Set([editor]),
-      null // Awareness will be added in Phase 4
+      provider ? provider.awareness : null
     )
 
     // Track cursor position
@@ -213,5 +213,6 @@ export default function Editor({ roomId, language, onLanguageChange }) {
     editorRef,
     languages: LANGUAGES,
     synced,
+    provider,
   }
 }

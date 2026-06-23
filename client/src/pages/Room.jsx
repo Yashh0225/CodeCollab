@@ -40,6 +40,7 @@ export default function Room() {
     wordCount,
     languages,
     synced,
+    provider,
   } = Editor({ roomId, language, onLanguageChange: setLanguage })
 
   if (loading) {
@@ -93,6 +94,7 @@ export default function Room() {
           isOpen={sidebarOpen}
           roomInfo={roomInfo}
           currentUser={user}
+          provider={provider}
         />
       </div>
 
