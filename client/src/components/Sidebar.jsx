@@ -3,16 +3,23 @@ import { useAwareness } from '../hooks/useAwareness'
 export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
   const onlineUsers = useAwareness(provider)
 
-  if (!isOpen) return null
-
   // Ensure current user is included if offline/no-provider
   const usersToDisplay = onlineUsers.length > 0 
     ? onlineUsers 
     : [currentUser || { username: 'Guest', color: '#7c6aef' }]
 
   return (
-    <div className={`sidebar ${isOpen ? '' : 'collapsed'}`}>
-      <div className="sidebar-header">
+    <div style={{
+      width: isOpen ? 'var(--sidebar-width)' : '0px',
+      transition: 'width 0.3s ease-in-out, border-color 0.3s ease-in-out',
+      overflow: 'hidden',
+      borderLeft: isOpen ? '1px solid var(--border-primary)' : '1px solid transparent',
+      background: 'var(--bg-secondary)',
+      flexShrink: 0,
+      zIndex: 100,
+    }}>
+      <div style={{ width: 'var(--sidebar-width)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="sidebar-header">
         <span className="sidebar-title">Collaborators</span>
         <span style={{
           fontSize: '11px',
@@ -128,5 +135,6 @@ export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
         </div>
       </div>
     </div>
+  </div>
   )
 }

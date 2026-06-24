@@ -378,6 +378,57 @@ npm run dev    # http://localhost:5173
 
 ---
 
+## Phase 6: History Snapshots + Features
+
+**Status**: ✅ Complete  
+**Timeline**: Week 2, Day 6–7  
+**Focus**: Allowing users to save points in time and instantly rollback code using CRDT transactions.
+
+### What Was Built
+| Component | File | Purpose |
+|---|---|---|
+| **History Panel** | `src/components/HistoryPanel.jsx` | Slide-out UI to view and interact with past code snapshots. |
+| **Restore Logic** | `HistoryPanel.jsx` | Manipulates the Yjs document (`ytext.delete`, `ytext.insert`) to collaboratively overwrite the code for all users. |
+| **Snapshots API** | `server/routes/rooms.js` | Express endpoints to save code strings into Supabase Postgres. |
+
+### Features Working
+- ✅ Slide-out UI with smooth CSS width transitions.
+- ✅ Chronological list of past snapshots per room.
+- ✅ Instant collaborative rollback (restoring a snapshot instantly pushes the change to all connected clients without breaking CRDT sync).
+- ✅ Auto-collapse on editor focus.
+
+---
+
+## Architecture, Workflows, and Technical Reasoning
+
+### 1. CRDTs for Real-Time Collaboration (Yjs)
+**Why Yjs?** Traditional operational transformation (OT) requires a central server to resolve editing conflicts. Yjs uses Conflict-free Replicated Data Types (CRDTs), which mathematically guarantee that all users will converge on the exact same document state regardless of network delays or order of operations.
+**Workflow**: 
+1. User A types a character in Monaco.
+2. The `MonacoBinding` captures this and updates the local Yjs document (`Y.Doc`).
+3. Yjs encodes this minimal update as a binary blob.
+4. The blob is sent over WebSocket to the `sync-server`, which blindly broadcasts it to User B.
+5. User B's Yjs document applies the binary update and updates their Monaco editor.
+
+### 2. High-Performance WebSocket Sync (`y-websocket`)
+**Why a separate sync server?** While our Express REST API handles authentication and database queries, real-time collaboration requires hundreds of small, persistent messages per second. A dedicated Node.js WebSocket server (`sync-server`) ensures the REST API doesn't get bottlenecked by socket pooling.
+
+### 3. In-Memory Persistence (Upstash Redis)
+**Why Redis?** Yjs documents exist in memory. If the `sync-server` crashes, the document state is lost. Instead of saving every keystroke to a slow SQL database, the sync-server hooks into document updates and saves the compressed Yjs binary state directly to Upstash Redis.
+**Workflow**:
+1. When the last user leaves a room, the current binary state is preserved in Redis.
+2. When a new user joins an empty room, the `sync-server` fetches the binary blob from Redis and hydrates the document instantly.
+
+### 4. Relational Storage & Auth (Supabase PostgreSQL)
+**Why Supabase?** We needed a reliable place to store persistent user accounts, room metadata, and historical code snapshots. Supabase provides an instantly scalable Postgres database with great Node.js client support (`@supabase/supabase-js`).
+**Workflow**:
+1. Express handles Google/GitHub OAuth or Email/Password registration.
+2. Express issues a JWT to the client.
+3. The client includes this JWT in the `Authorization` header when saving a History Snapshot.
+4. Express verifies the JWT and writes the snapshot to Postgres.
+
+---
+
 ## Development Phases Summary
 
 | Phase | Name | Timeline | Status |
@@ -387,8 +438,8 @@ npm run dev    # http://localhost:5173
 | 3 | Yjs + y-websocket Sync | Day 5–7 | ✅ Complete |
 | 4 | Coloured Cursors + Presence | Week 2, Day 1–3 | ✅ Complete |
 | 5 | Redis Persistence | Week 2, Day 4–5 | ✅ Complete |
-| 6 | History Snapshots + Features | Week 2, Day 6–7 | ⬜ Pending |
-| 7 | Deploy (Vercel + Railway + Render) | Week 3 | ⬜ Pending |
+| 6 | History Snapshots + Features | Week 2, Day 6–7 | ✅ Complete |
+| 7 | Deploy (Vercel + Railway + Render) | Week 3 | ✅ Complete |
 
 ---
 
@@ -396,11 +447,11 @@ npm run dev    # http://localhost:5173
 
 | Service | Platform | Cost | Notes |
 |---|---|---|---|
-| Frontend (React) | **Vercel** | Free | Auto-deploy from GitHub, global CDN |
-| REST API (Express) | **Render.com** | Free | Node.js hosting, auto-deploy |
-| Sync Server (y-websocket) | **Railway.app** | Free | WebSocket support required |
-| Redis | **Upstash** | Free | Serverless Redis, 10k commands/day |
-| PostgreSQL | **Supabase** | Free | Managed Postgres, 500MB storage |
+| Frontend (React) | **Vercel** | Free | Auto-deploy from GitHub, global CDN. Needs `vercel.json` for React Router. |
+| REST API (Express) | **Render.com** | Free | Node.js hosting, auto-deploy. Binds to `PORT`. |
+| Sync Server (y-websocket) | **Railway.app** | Free | High-performance WebSocket relay. |
+| Redis | **Upstash** | Free | Serverless Redis, 10k commands/day. |
+| PostgreSQL | **Supabase** | Free | Managed Postgres, 500MB storage. |
 
 **Total cost: ₹0**
 
@@ -413,6 +464,7 @@ npm run dev    # http://localhost:5173
 PORT=3001
 DATABASE_URL=postgresql://...@db.supabase.co:5432/postgres
 JWT_SECRET=your-secret-key
+CLIENT_URL=https://your-vercel-app.vercel.app
 
 # OAuth
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -424,31 +476,18 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
 REDIS_URL=redis://default:...@...-redis.upstash.io:6379
 
 # Sync Server
-SYNC_SERVER_PORT=1234
+PORT=1234
 
 # Client
-VITE_API_URL=http://localhost:3001
-VITE_WS_URL=ws://localhost:1234
+VITE_API_URL=https://your-render-app.onrender.com
+VITE_WS_URL=wss://your-railway-app.up.railway.app
 ```
 
 ---
 
 ## Running Locally
 
-### Phase 2 (Current)
-```bash
-# Terminal 1: API Server
-cd server
-npm install
-npm run dev    # http://localhost:3001
-
-# Terminal 2: Frontend
-cd client
-npm install
-npm run dev    # http://localhost:5173
-```
-
-### Full Stack (Phase 3+)
+### Full Stack
 ```bash
 # Terminal 1: Frontend
 cd client && npm run dev
@@ -460,11 +499,6 @@ cd server && npm run dev
 cd sync-server && node server.js
 ```
 
-### With Docker (Phase 5+)
-```bash
-docker-compose up
-```
-
 ---
 
-*Last updated: Phase 5 complete — June 2026*
+*Last updated: Phase 7 complete — June 2026*

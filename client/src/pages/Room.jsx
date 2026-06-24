@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Editor from '../components/Editor'
 import Toolbar from '../components/Toolbar'
 import Sidebar from '../components/Sidebar'
+import HistoryPanel from '../components/HistoryPanel'
 import StatusBar from '../components/StatusBar'
 import { getRoom, getUser, isAuthenticated } from '../services/api'
 
@@ -11,6 +12,7 @@ export default function Room() {
   const navigate = useNavigate()
   const [language, setLanguage] = useState('javascript')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [roomInfo, setRoomInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const user = getUser()
@@ -41,6 +43,7 @@ export default function Room() {
     languages,
     synced,
     provider,
+    ytext,
   } = Editor({ roomId, language, onLanguageChange: setLanguage })
 
   if (loading) {
@@ -83,11 +86,19 @@ export default function Room() {
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         roomId={roomId}
         onNavigateHome={() => navigate('/')}
+        historyOpen={historyOpen}
+        onToggleHistory={() => setHistoryOpen(!historyOpen)}
       />
 
       {/* Main Content: Editor + Sidebar */}
       <div className="main-content">
-        <div className="editor-area">
+        <HistoryPanel
+          isOpen={historyOpen}
+          roomId={roomId}
+          ytext={ytext}
+          onClose={() => setHistoryOpen(false)}
+        />
+        <div className="editor-area" onClickCapture={() => historyOpen && setHistoryOpen(false)}>
           {editorComponent}
         </div>
         <Sidebar

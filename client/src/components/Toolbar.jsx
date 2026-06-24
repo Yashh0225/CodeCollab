@@ -60,6 +60,8 @@ export default function Toolbar({
   onToggleSidebar,
   roomId,
   onNavigateHome,
+  historyOpen,
+  onToggleHistory,
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -156,10 +158,23 @@ export default function Toolbar({
 
         <button
           className="icon-btn tooltip-wrapper"
-          data-tooltip="Session History"
+          data-tooltip="Retrieve code"
+          onClick={onToggleHistory}
           id="history-btn"
+          style={{
+            ...(historyOpen ? { color: 'var(--accent-primary)' } : {}),
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '4px 12px',
+            width: 'auto',
+            borderRadius: '6px'
+          }}
         >
-          <Icons.History />
+          <div style={{ width: '18px', height: '18px', display: 'flex' }}>
+            <Icons.History />
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 500 }}>History</span>
         </button>
 
         <div className="toolbar-divider" />

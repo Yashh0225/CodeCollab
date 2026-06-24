@@ -214,5 +214,6 @@ export default function Editor({ roomId, language, onLanguageChange }) {
     languages: LANGUAGES,
     synced,
     provider,
+    ytext,
   }
 }
