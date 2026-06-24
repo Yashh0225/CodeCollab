@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { setToken } from '../services/api'
+import { setToken, setUser, getMe } from '../services/api'
 
 /**
  * OAuth callback handler — receives token from URL params,
- * stores it, and redirects to home page.
+ * stores it, fetches user profile, and redirects to home page.
  */
 export default function AuthCallback() {
   const navigate = useNavigate()
@@ -14,9 +14,17 @@ export default function AuthCallback() {
     const token = searchParams.get('token')
     if (token) {
       setToken(token)
-      // TODO: fetch user profile from /auth/me and store
+      getMe()
+        .then(data => {
+          if (data && data.user) {
+            setUser(data.user)
+          }
+        })
+        .catch(err => console.error('Failed to fetch user:', err))
+        .finally(() => navigate('/', { replace: true }))
+    } else {
+      navigate('/', { replace: true })
     }
-    navigate('/', { replace: true })
   }, [navigate, searchParams])
 
   return (
