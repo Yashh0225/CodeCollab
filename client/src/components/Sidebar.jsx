@@ -154,6 +154,7 @@ export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
           </button>
         </div>
       </div>
+      </div>
     </div>
   )
 }
