@@ -22,6 +22,7 @@ export default function Room() {
 
   const handleLanguageChange = async (newLang) => {
     setLanguage(newLang) // Optimistic local update
+    setRoomInfo(prev => prev ? { ...prev, language: newLang } : null)
     
     // 1. Instant sync to active users via Yjs
     if (ymetaRef.current) {
@@ -76,6 +77,7 @@ export default function Room() {
       const remoteLang = ymeta.get('language')
       if (remoteLang) {
         setLanguage(prev => remoteLang !== prev ? remoteLang : prev)
+        setRoomInfo(prev => prev ? { ...prev, language: remoteLang } : null)
       }
     }
     
@@ -84,6 +86,7 @@ export default function Room() {
     const initialLang = ymeta.get('language')
     if (initialLang) {
       setLanguage(prev => initialLang !== prev ? initialLang : prev)
+      setRoomInfo(prev => prev ? { ...prev, language: initialLang } : null)
     }
 
     return () => ymeta.unobserve(observer)
@@ -154,7 +157,7 @@ export default function Room() {
       {/* Top Toolbar */}
       <Toolbar
         language={language}
-        onLanguageChange={setLanguage}
+        onLanguageChange={handleLanguageChange}
         languages={languages}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
