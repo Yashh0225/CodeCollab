@@ -44,6 +44,7 @@ export default function Room() {
     synced,
     provider,
     ytext,
+    status,
   } = Editor({ roomId, language, onLanguageChange: setLanguage })
 
   if (loading) {
@@ -115,6 +116,7 @@ export default function Room() {
         cursorPosition={cursorPosition}
         wordCount={wordCount}
         connected={synced}
+        status={status}
         roomId={roomId}
       />
     </div>

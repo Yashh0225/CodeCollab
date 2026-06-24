@@ -1,11 +1,12 @@
-/* eslint-disable react/prop-types */
+export default function StatusBar({ language, cursorPosition, wordCount, connected, status }) {
+  const isOnline = status === 'connected';
+  const isConnecting = status === 'connecting';
 
-export default function StatusBar({ language, cursorPosition, wordCount, connected }) {
   return (
     <div className="statusbar">
       <div className="statusbar-item">
-        <div className={`statusbar-dot ${connected ? 'online' : 'offline'}`} />
-        <span>{connected ? 'Connected' : 'Disconnected (Read Only)'}</span>
+        <div className={`statusbar-dot ${isOnline ? 'online' : (isConnecting ? 'connecting' : 'offline')}`} style={isConnecting ? { background: '#eab308', boxShadow: '0 0 8px rgba(234, 179, 8, 0.5)' } : {}} />
+        <span>{isOnline ? 'Connected' : (isConnecting ? 'Connecting...' : 'Disconnected (Read Only)')}</span>
       </div>
 
       <div className="statusbar-item">

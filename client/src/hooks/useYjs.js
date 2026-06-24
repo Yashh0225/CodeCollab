@@ -8,6 +8,7 @@ export function useYjs(roomId) {
   const ydoc = useMemo(() => new Y.Doc(), [])
   const ytext = useMemo(() => ydoc.getText('code'), [ydoc])
   const [synced, setSynced] = useState(false)
+  const [status, setStatus] = useState('connecting')
   const [provider, setProvider] = useState(null)
 
   useEffect(() => {
@@ -47,6 +48,10 @@ export function useYjs(roomId) {
       }
     })
 
+    wsProvider.on('status', event => {
+      setStatus(event.status) // 'connecting', 'connected', 'disconnected'
+    })
+
     return () => {
       wsProvider.destroy()
       idbProvider.destroy()
@@ -54,5 +59,5 @@ export function useYjs(roomId) {
     }
   }, [roomId, ydoc])
 
-  return { ydoc, ytext, synced, provider }
+  return { ydoc, ytext, synced, provider, status }
 }
