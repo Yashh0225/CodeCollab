@@ -149,6 +149,26 @@ export async function createRoom({ id, name, language, ownerId }) {
   return { data, error }
 }
 
+export async function updateRoomLanguage(roomId, language) {
+  if (isDemo) {
+    const room = memStore.rooms.find(r => r.id === roomId)
+    if (room) {
+      room.language = language
+      return { data: room, error: null }
+    }
+    return { data: null, error: 'Room not found' }
+  }
+
+  const { data, error } = await supabase
+    .from('rooms')
+    .update({ language })
+    .eq('id', roomId)
+    .select()
+    .single()
+
+  return { data, error }
+}
+
 export async function findRoomById(id) {
   if (isDemo) {
     const room = memStore.rooms.find(r => r.id === id)

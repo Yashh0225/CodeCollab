@@ -9,7 +9,7 @@
 
 import { Router } from 'express'
 import { nanoid } from 'nanoid'
-import { createRoom, findRoomById, getUserRooms, createSnapshot, getRoomSnapshots } from '../db.js'
+import { createRoom, findRoomById, getUserRooms, createSnapshot, getRoomSnapshots, updateRoomLanguage } from '../db.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 
 const router = Router()
@@ -133,6 +133,32 @@ router.get('/:id/snapshots', optionalAuth, async (req, res) => {
     res.json({ snapshots })
   } catch (err) {
     console.error('List snapshots error:', err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+
+// PUT /rooms/:id/language — update room language
+// ============================================
+router.put('/:id/language', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params
+    const { language } = req.body
+
+    const { data: room, error } = await updateRoomLanguage(id, language)
+
+    if (error) {
+      console.error('Update room language error:', error)
+      return res.status(500).json({ error: 'Failed to update room language' })
+    }
+
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' })
+    }
+
+    res.json({ room })
+  } catch (err) {
+    console.error('Update room language error:', err)
     res.status(500).json({ error: 'Internal server error' })
   }
 })

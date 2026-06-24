@@ -88,10 +88,6 @@ export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
                 </div>
               </>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-tertiary)' }}>Mode</span>
-              <span style={{ color: 'var(--text-secondary)' }}>Local (Phase 2)</span>
-            </div>
           </div>
         </div>
 
@@ -133,8 +129,31 @@ export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
             ))}
           </div>
         </div>
+
+        {/* Leave Room Button */}
+        <div style={{ padding: '16px', borderTop: '1px solid var(--border-primary)', marginTop: 'auto' }}>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="btn btn-secondary"
+            style={{ 
+              width: '100%', 
+              color: 'var(--color-error)', 
+              borderColor: 'rgba(248, 113, 113, 0.2)',
+              background: 'rgba(248, 113, 113, 0.05)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(248, 113, 113, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(248, 113, 113, 0.05)';
+              e.currentTarget.style.borderColor = 'rgba(248, 113, 113, 0.2)';
+            }}
+          >
+            Leave Room
+          </button>
+        </div>
       </div>
     </div>
-  </div>
   )
 }

@@ -11,6 +11,8 @@ export function useYjs(roomId) {
   const [status, setStatus] = useState('connecting')
   const [provider, setProvider] = useState(null)
 
+  const ymeta = useMemo(() => ydoc.getMap('metadata'), [ydoc])
+
   useEffect(() => {
     if (!roomId) return
 
@@ -59,5 +61,5 @@ export function useYjs(roomId) {
     }
   }, [roomId, ydoc])
 
-  return { ydoc, ytext, synced, provider, status }
+  return { ydoc, ytext, synced, provider, status, ymeta }
 }

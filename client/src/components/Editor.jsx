@@ -87,7 +87,7 @@ export default function Editor({ roomId, language, onLanguageChange }) {
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 })
   const [wordCount, setWordCount] = useState(0)
   
-  const { ydoc, ytext, synced, provider, status } = useYjs(roomId)
+  const { ydoc, ytext, synced, provider, status, ymeta } = useYjs(roomId)
 
   const handleEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor
@@ -235,5 +235,6 @@ export default function Editor({ roomId, language, onLanguageChange }) {
     provider,
     ytext,
     status,
+    ymeta,
   }
 }

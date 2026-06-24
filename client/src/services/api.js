@@ -136,3 +136,10 @@ export async function saveSnapshot(roomId, content) {
 export async function listSnapshots(roomId) {
   return request(`/rooms/${roomId}/snapshots`)
 }
+
+export const updateRoomLanguage = async (roomId, language) => {
+  return request(`/rooms/${roomId}/language`, {
+    method: 'PUT',
+    body: JSON.stringify({ language }),
+  })
+}
