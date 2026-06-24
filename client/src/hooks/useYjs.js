@@ -14,8 +14,9 @@ export function useYjs(roomId) {
     if (!roomId) return
 
     // Setup y-websocket provider
+    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:1234'
     const wsProvider = new WebsocketProvider(
-      'ws://localhost:1234',
+      wsUrl,
       roomId,
       ydoc
     )

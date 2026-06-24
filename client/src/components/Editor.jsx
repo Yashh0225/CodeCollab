@@ -139,11 +139,29 @@ export default function Editor({ roomId, language, onLanguageChange }) {
 
   return {
     editorComponent: (
-      <div className="editor-container">
-        <MonacoEditor
-          height="100%"
-          language={language}
-          theme="vs-dark"
+      <div className="editor-container" style={{ display: 'flex', flexDirection: 'column' }}>
+        {!synced && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.1)',
+            color: '#ef4444',
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            borderBottom: '1px solid rgba(239, 68, 68, 0.2)'
+          }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
+            Disconnected — Read Only Mode
+          </div>
+        )}
+        <div style={{ flex: 1, position: 'relative' }}>
+          <MonacoEditor
+            height="100%"
+            language={language}
+            theme="vs-dark"
           defaultValue={getDefaultValue()}
           onMount={handleEditorMount}
           options={{
@@ -206,6 +224,7 @@ export default function Editor({ roomId, language, onLanguageChange }) {
             </div>
           }
         />
+        </div>
       </div>
     ),
     cursorPosition,

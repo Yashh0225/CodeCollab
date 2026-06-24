@@ -1,11 +1,11 @@
 /* eslint-disable react/prop-types */
 
-export default function StatusBar({ language, cursorPosition, wordCount }) {
+export default function StatusBar({ language, cursorPosition, wordCount, connected }) {
   return (
     <div className="statusbar">
       <div className="statusbar-item">
-        <div className="statusbar-dot online" />
-        <span>Local Mode</span>
+        <div className={`statusbar-dot ${connected ? 'online' : 'offline'}`} />
+        <span>{connected ? 'Connected' : 'Disconnected (Read Only)'}</span>
       </div>
 
       <div className="statusbar-item">
