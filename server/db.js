@@ -5,6 +5,7 @@
 // falls back to an in-memory store for local development.
 
 import { createClient } from '@supabase/supabase-js'
+import WebSocket from 'ws'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -15,7 +16,10 @@ let supabase = null
 let isDemo = false
 
 if (supabaseUrl && supabaseServiceKey) {
-  supabase = createClient(supabaseUrl, supabaseServiceKey)
+  supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    global: { WebSocket },
+    realtime: { transport: WebSocket }
+  })
   console.log('✅ Connected to Supabase')
 } else {
   isDemo = true
