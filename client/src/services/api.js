@@ -143,3 +143,31 @@ export const updateRoomLanguage = async (roomId, language) => {
     body: JSON.stringify({ language }),
   })
 }
+
+// ============================================
+// Roles & Invites API
+// ============================================
+export async function generateInvite(roomId, role) {
+  return request(`/rooms/${roomId}/invite`, {
+    method: 'POST',
+    body: JSON.stringify({ role })
+  })
+}
+
+export async function joinRoom(roomId, token) {
+  return request(`/rooms/${roomId}/join`, {
+    method: 'POST',
+    body: JSON.stringify({ token })
+  })
+}
+
+export async function updateMemberRole(roomId, userId, role) {
+  return request(`/rooms/${roomId}/members/${userId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ role })
+  })
+}
+
+export async function fetchRoomRole(roomId) {
+  return request(`/rooms/${roomId}/role`)
+}

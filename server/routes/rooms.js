@@ -9,7 +9,8 @@
 
 import { Router } from 'express'
 import { nanoid } from 'nanoid'
-import { createRoom, findRoomById, getUserRooms, createSnapshot, getRoomSnapshots, updateRoomLanguage } from '../db.js'
+import jwt from 'jsonwebtoken'
+import { createRoom, findRoomById, getUserRooms, createSnapshot, getRoomSnapshots, updateRoomLanguage, addRoomMember, getRoomRole, updateRoomRole } from '../db.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 
 const router = Router()
@@ -162,5 +163,77 @@ router.put('/:id/language', optionalAuth, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 })
+
+// ============================================
+// Roles & Invites (Permissions Phase 2)
+// ============================================
+
+// POST /rooms/:id/invite — Generate an invite link
+router.post('/:id/invite', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body; // 'editor' or 'viewer'
+    
+    // Verify user is owner
+    const { data: userRole } = await getRoomRole(id, req.user.id);
+    if (userRole !== 'owner') {
+      return res.status(403).json({ error: 'Only owners can generate invites' });
+    }
+
+    // Bake role into a token
+    const token = jwt.sign({ roomId: id, role }, process.env.JWT_SECRET || 'super-secret-key', { expiresIn: '7d' });
+    
+    res.json({ token, link: `/room/${id}?invite=${token}` });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /rooms/:id/join — Consume an invite token
+router.post('/:id/join', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { token } = req.body;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key');
+    if (decoded.roomId !== id) return res.status(400).json({ error: 'Invalid token for this room' });
+
+    await addRoomMember(id, req.user.id, decoded.role);
+    res.json({ success: true, role: decoded.role });
+  } catch (err) {
+    res.status(400).json({ error: 'Invalid or expired invite token' });
+  }
+});
+
+// PUT /rooms/:id/members/:userId — Change someone's role
+router.put('/:id/members/:userId', requireAuth, async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const { role } = req.body;
+
+    const { data: userRole } = await getRoomRole(id, req.user.id);
+    if (userRole !== 'owner') return res.status(403).json({ error: 'Only owners can change roles' });
+
+    const { data, error } = await updateRoomRole(id, userId, role);
+    if (error) return res.status(500).json({ error: 'Failed to update role' });
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /rooms/:id/role — Get current user's role
+router.get('/:id/role', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: role, error } = await getRoomRole(id, req.user.id);
+    
+    if (error) return res.status(500).json({ error: 'Failed to get role' });
+    res.json({ role: role || 'none' });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 export default router

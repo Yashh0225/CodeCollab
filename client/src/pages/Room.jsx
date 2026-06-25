@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Editor from '../components/Editor'
 import Toolbar from '../components/Toolbar'
 import Sidebar from '../components/Sidebar'
 import HistoryPanel from '../components/HistoryPanel'
+import CrdtVisualizer from '../components/CrdtVisualizer'
 import StatusBar from '../components/StatusBar'
 import { useAwareness } from '../hooks/useAwareness'
-import { getRoom, getUser, isAuthenticated, updateRoomLanguage } from '../services/api'
+import { getRoom, getUser, isAuthenticated, updateRoomLanguage, fetchRoomRole, joinRoom } from '../services/api'
 
 export default function Room() {
   const { id: roomId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [language, setLanguage] = useState('javascript')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [visualizerOpen, setVisualizerOpen] = useState(false)
   const [roomInfo, setRoomInfo] = useState(null)
+  const [role, setRole] = useState('none')
   const [loading, setLoading] = useState(true)
   const [toasts, setToasts] = useState([])
   const user = getUser()
@@ -42,15 +46,41 @@ export default function Room() {
   }, [roomId])
 
   const loadRoom = async () => {
+    if (!isAuthenticated()) {
+      const currentUrl = location.pathname + location.search
+      navigate(`/?login=true&redirect=${encodeURIComponent(currentUrl)}`, { replace: true })
+      return
+    }
+
     try {
-      const data = await getRoom(roomId)
-      setRoomInfo(data.room)
-      if (data.room.language) {
-        setLanguage(data.room.language)
+      // Check for invite token
+      const urlParams = new URLSearchParams(location.search)
+      const inviteToken = urlParams.get('invite')
+      if (inviteToken && isAuthenticated()) {
+        try {
+          await joinRoom(roomId, inviteToken)
+          // Clean up URL
+          window.history.replaceState({}, document.title, window.location.pathname)
+        } catch (err) {
+          console.error('Failed to join via invite:', err)
+        }
       }
+
+      // Fetch room and role
+      const [roomData, roleData] = await Promise.all([
+        getRoom(roomId),
+        isAuthenticated() ? fetchRoomRole(roomId).catch(() => ({ role: 'none' })) : { role: 'none' }
+      ])
+      
+      setRoomInfo(roomData.room)
+      if (roomData.room.language) {
+        setLanguage(roomData.room.language)
+      }
+      setRole(roleData.role || 'none')
     } catch {
       // Room might not exist in DB yet — that's OK for demo mode
       setRoomInfo({ id: roomId, name: `Room ${roomId}`, language: 'javascript' })
+      setRole('owner') // Default to owner in demo mode
     } finally {
       setLoading(false)
     }
@@ -64,9 +94,10 @@ export default function Room() {
     synced,
     provider,
     ytext,
+    ydoc,
     status,
     ymeta,
-  } = Editor({ roomId, language, onLanguageChange: handleLanguageChange })
+  } = Editor({ roomId, language, onLanguageChange: handleLanguageChange, role })
 
   // Listen to remote language changes from Yjs
   useEffect(() => {
@@ -165,6 +196,7 @@ export default function Room() {
         onNavigateHome={() => navigate('/')}
         historyOpen={historyOpen}
         onToggleHistory={() => setHistoryOpen(!historyOpen)}
+        onOpenVisualizer={() => setVisualizerOpen(true)}
       />
 
       {/* Main Content: Editor + Sidebar */}
@@ -173,6 +205,7 @@ export default function Room() {
           isOpen={historyOpen}
           roomId={roomId}
           ytext={ytext}
+          language={language}
           onClose={() => setHistoryOpen(false)}
         />
         <div className="editor-area" onClickCapture={() => historyOpen && setHistoryOpen(false)}>
@@ -183,6 +216,7 @@ export default function Room() {
           roomInfo={roomInfo}
           currentUser={user}
           provider={provider}
+          role={role}
         />
       </div>
 
@@ -195,6 +229,13 @@ export default function Room() {
         status={status}
         roomId={roomId}
       />
+
+      {visualizerOpen && (
+        <CrdtVisualizer 
+          ydoc={ydoc} 
+          onClose={() => setVisualizerOpen(false)} 
+        />
+      )}
 
       {/* Toast Notifications */}
       <div style={{

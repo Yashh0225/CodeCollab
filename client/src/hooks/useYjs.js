@@ -2,9 +2,9 @@ import { useMemo, useEffect, useState } from 'react'
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
 import { IndexeddbPersistence } from 'y-indexeddb'
-import { getUser } from '../services/api'
+import { getUser, getToken } from '../services/api'
 
-export function useYjs(roomId) {
+export function useYjs(roomId, role) {
   const ydoc = useMemo(() => new Y.Doc(), [])
   const ytext = useMemo(() => ydoc.getText('code'), [ydoc])
   const [synced, setSynced] = useState(false)
@@ -18,28 +18,27 @@ export function useYjs(roomId) {
 
     // Setup y-websocket provider
     const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:1234'
+    const token = getToken()
+    const queryParams = token ? `?token=${token}` : ''
+    
     const wsProvider = new WebsocketProvider(
       wsUrl,
-      roomId,
+      roomId + queryParams,
       ydoc
     )
 
+    setProvider(wsProvider)
+
     // Set local awareness state
-    const user = getUser()
-    if (user) {
+    const updateAwareness = () => {
+      const user = getUser()
       wsProvider.awareness.setLocalStateField('user', {
-        name: user.username,
-        color: user.color || '#7c6aef',
-      })
-    } else {
-      // Fallback for demo
-      wsProvider.awareness.setLocalStateField('user', {
-        name: 'Anonymous',
-        color: '#9ca3af',
+        name: user ? user.username : 'Anonymous',
+        color: user ? (user.color || '#7c6aef') : '#9ca3af',
+        role: role || 'none'
       })
     }
-
-    setProvider(wsProvider)
+    updateAwareness()
 
     // Setup offline persistence
     const idbProvider = new IndexeddbPersistence(roomId, ydoc)
@@ -61,5 +60,16 @@ export function useYjs(roomId) {
     }
   }, [roomId, ydoc])
 
-  return { ydoc, ytext, synced, provider, status, ymeta }
+  useEffect(() => {
+    if (provider && provider.awareness) {
+      const user = getUser()
+      provider.awareness.setLocalStateField('user', {
+        name: user ? user.username : 'Anonymous',
+        color: user ? (user.color || '#7c6aef') : '#9ca3af',
+        role: role || 'none'
+      })
+    }
+  }, [provider, role])
+
+  return { ydoc, ytext, ymeta, synced, provider, status }
 }

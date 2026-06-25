@@ -50,6 +50,11 @@ const Icons = {
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
     </svg>
   ),
+  Database: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+    </svg>
+  ),
 }
 
 export default function Toolbar({
@@ -62,6 +67,7 @@ export default function Toolbar({
   onNavigateHome,
   historyOpen,
   onToggleHistory,
+  onOpenVisualizer,
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -178,6 +184,14 @@ export default function Toolbar({
         </button>
 
         <div className="toolbar-divider" />
+
+        <button 
+          className="icon-btn tooltip-wrapper" 
+          data-tooltip="CRDT Visualizer"
+          onClick={onOpenVisualizer}
+        >
+          <Icons.Database />
+        </button>
 
         <button
           className="icon-btn tooltip-wrapper"

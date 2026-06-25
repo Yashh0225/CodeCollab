@@ -1,12 +1,24 @@
 import { useAwareness } from '../hooks/useAwareness'
+import { generateInvite } from '../services/api'
 
-export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
+export default function Sidebar({ isOpen, roomInfo, currentUser, provider, role }) {
   const onlineUsers = useAwareness(provider)
 
   // Ensure current user is included if offline/no-provider
   const usersToDisplay = onlineUsers.length > 0 
     ? onlineUsers 
-    : [currentUser || { username: 'Guest', color: '#7c6aef' }]
+    : [currentUser ? { ...currentUser, name: currentUser.username, role } : { name: 'Guest', color: '#7c6aef', role }]
+
+  const handleInvite = async (inviteRole) => {
+    try {
+      const { token, link } = await generateInvite(roomInfo.id, inviteRole)
+      await navigator.clipboard.writeText(window.location.origin + link)
+      // We could use toast, but alert is fine for now
+      alert(`Invite link for ${inviteRole} copied to clipboard!`)
+    } catch (err) {
+      alert('Failed to generate invite link')
+    }
+  }
 
   return (
     <div style={{
@@ -16,7 +28,7 @@ export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
       borderLeft: isOpen ? '1px solid var(--border-primary)' : '1px solid transparent',
       background: 'var(--bg-secondary)',
       flexShrink: 0,
-      zIndex: 100,
+      zIndex: 5,
     }}>
       <div style={{ width: 'var(--sidebar-width)', display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div className="sidebar-header">
@@ -47,13 +59,15 @@ export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
                 </div>
                 <div>
                   <div className="user-name">{u.name}</div>
-                  <div className="user-status">Editing</div>
+                  <div className="user-status" style={{ textTransform: 'capitalize' }}>{u.role || 'viewer'}</div>
                 </div>
                 {isMe && <span className="user-badge">You</span>}
               </div>
             )
           })}
         </div>
+
+
 
         {/* Room info section */}
         <div style={{ marginTop: '24px' }}>
@@ -130,8 +144,26 @@ export default function Sidebar({ isOpen, roomInfo, currentUser, provider }) {
           </div>
         </div>
 
-        {/* Leave Room Button */}
+        {/* Leave Room & Actions Button */}
         <div style={{ padding: '16px', borderTop: '1px solid var(--border-primary)', marginTop: 'auto' }}>
+          {role === 'owner' && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <button 
+                className="btn btn-secondary" 
+                style={{ flex: 1, padding: '8px', fontSize: '13px' }}
+                onClick={() => handleInvite('editor')}
+              >
+                + Editor
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                style={{ flex: 1, padding: '8px', fontSize: '13px' }}
+                onClick={() => handleInvite('viewer')}
+              >
+                + Viewer
+              </button>
+            </div>
+          )}
           <button
             onClick={() => window.location.href = '/'}
             className="btn btn-secondary"

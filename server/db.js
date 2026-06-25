@@ -34,6 +34,7 @@ const memStore = {
   users: [],
   rooms: [],
   snapshots: [],
+  room_members: [],
 }
 
 // ============================================
@@ -137,6 +138,7 @@ export async function createRoom({ id, name, language, ownerId }) {
   if (isDemo) {
     const room = { id, name, language: language || 'javascript', owner_id: ownerId, created_at: new Date().toISOString() }
     memStore.rooms.push(room)
+    if (ownerId) await addRoomMember(id, ownerId, 'owner')
     return { data: room, error: null }
   }
 
@@ -145,6 +147,10 @@ export async function createRoom({ id, name, language, ownerId }) {
     .insert({ id, name, language: language || 'javascript', owner_id: ownerId })
     .select()
     .single()
+
+  if (ownerId && !error) {
+    await addRoomMember(id, ownerId, 'owner')
+  }
 
   return { data, error }
 }
@@ -228,6 +234,60 @@ export async function getRoomSnapshots(roomId) {
     .eq('room_id', roomId)
     .order('saved_at', { ascending: false })
 
+  return { data, error }
+}
+
+// ============================================
+// Room Members & Permissions
+// ============================================
+
+export async function addRoomMember(roomId, userId, role) {
+  if (isDemo) {
+    memStore.room_members = memStore.room_members.filter(m => !(m.room_id === roomId && m.user_id === userId))
+    const member = { room_id: roomId, user_id: userId, role, created_at: new Date().toISOString() }
+    memStore.room_members.push(member)
+    return { data: member, error: null }
+  }
+
+  const { data, error } = await supabase
+    .from('room_members')
+    .upsert({ room_id: roomId, user_id: userId, role }, { onConflict: 'room_id,user_id' })
+    .select()
+    .single()
+  return { data, error }
+}
+
+export async function getRoomRole(roomId, userId) {
+  if (isDemo) {
+    const member = memStore.room_members.find(m => m.room_id === roomId && m.user_id === userId)
+    return { data: member ? member.role : null, error: null }
+  }
+
+  const { data, error } = await supabase
+    .from('room_members')
+    .select('role')
+    .eq('room_id', roomId)
+    .eq('user_id', userId)
+    .single()
+    
+  if (error && error.code === 'PGRST116') return { data: null, error: null }
+  return { data: data ? data.role : null, error }
+}
+
+export async function updateRoomRole(roomId, userId, role) {
+  if (isDemo) {
+    const member = memStore.room_members.find(m => m.room_id === roomId && m.user_id === userId)
+    if (member) member.role = role
+    return { data: member, error: null }
+  }
+
+  const { data, error } = await supabase
+    .from('room_members')
+    .update({ role })
+    .eq('room_id', roomId)
+    .eq('user_id', userId)
+    .select()
+    .single()
   return { data, error }
 }
 

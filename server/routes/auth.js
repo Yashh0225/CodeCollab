@@ -138,33 +138,37 @@ router.get('/me', requireAuth, async (req, res) => {
 // ============================================
 // OAuth — Google
 // ============================================
-router.get('/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-)
+// OAuth — Google
+// ============================================
+router.get('/google', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID) return res.redirect('/?error=Google_OAuth_Not_Configured')
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next)
+})
 
-router.get('/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/auth/oauth-error' }),
-  (req, res) => {
-    const token = generateToken(req.user)
-    // Redirect to frontend with token
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?token=${token}`)
-  }
-)
+router.get('/google/callback', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID) return res.redirect('/?error=Google_OAuth_Not_Configured')
+  passport.authenticate('google', { session: false, failureRedirect: '/auth/oauth-error' })(req, res, next)
+}, (req, res) => {
+  const token = generateToken(req.user)
+  // Redirect to frontend with token
+  res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?token=${token}`)
+})
 
 // ============================================
 // OAuth — GitHub
 // ============================================
-router.get('/github',
-  passport.authenticate('github', { scope: ['user:email'] })
-)
+router.get('/github', (req, res, next) => {
+  if (!process.env.GITHUB_CLIENT_ID) return res.redirect('/?error=GitHub_OAuth_Not_Configured')
+  passport.authenticate('github', { scope: ['user:email'] })(req, res, next)
+})
 
-router.get('/github/callback',
-  passport.authenticate('github', { session: false, failureRedirect: '/auth/oauth-error' }),
-  (req, res) => {
-    const token = generateToken(req.user)
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?token=${token}`)
-  }
-)
+router.get('/github/callback', (req, res, next) => {
+  if (!process.env.GITHUB_CLIENT_ID) return res.redirect('/?error=GitHub_OAuth_Not_Configured')
+  passport.authenticate('github', { session: false, failureRedirect: '/auth/oauth-error' })(req, res, next)
+}, (req, res) => {
+  const token = generateToken(req.user)
+  res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?token=${token}`)
+})
 
 // ============================================
 // OAuth error fallback

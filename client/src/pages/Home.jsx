@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   register, login, createRoom, listRooms,
   isAuthenticated, getUser, logout,
@@ -139,6 +139,7 @@ function AuthModal({ onClose, onSuccess }) {
 // ============================================
 export default function Home() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [showAuth, setShowAuth] = useState(false)
   const [user, setUser] = useState(getUser())
   const [roomIdInput, setRoomIdInput] = useState('')
@@ -153,18 +154,25 @@ export default function Home() {
     }
   }, [user])
 
-  // Handle OAuth callback
+  // Handle OAuth callback & Redirect params
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(location.search)
     const token = params.get('token')
     if (token) {
       localStorage.setItem('codecollab_token', token)
-      // Remove token from URL
-      window.history.replaceState({}, '', '/')
-      // Refresh user state
+      
+      const redirect = params.get('redirect')
+      if (redirect) {
+        navigate(redirect, { replace: true })
+      } else {
+        window.history.replaceState({}, '', '/')
+      }
+      
       setUser(getUser())
+    } else if (params.get('login') === 'true' && !isAuthenticated()) {
+      setShowAuth(true)
     }
-  }, [])
+  }, [navigate])
 
   const loadRooms = async () => {
     try {
@@ -206,6 +214,12 @@ export default function Home() {
   const handleAuthSuccess = () => {
     setShowAuth(false)
     setUser(getUser())
+
+    const params = new URLSearchParams(location.search)
+    const redirect = params.get('redirect')
+    if (redirect) {
+      navigate(redirect, { replace: true })
+    }
   }
 
   const handleLogout = () => {

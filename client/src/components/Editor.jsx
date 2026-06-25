@@ -81,13 +81,13 @@ console.log(greet(user));
 `,
 }
 
-export default function Editor({ roomId, language, onLanguageChange }) {
+export default function Editor({ roomId, language, onLanguageChange, role }) {
   const editorRef = useRef(null)
   const bindingRef = useRef(null)
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 })
   const [wordCount, setWordCount] = useState(0)
   
-  const { ydoc, ytext, synced, provider, status, ymeta } = useYjs(roomId)
+  const { ydoc, ytext, synced, provider, status, ymeta } = useYjs(roomId, role)
 
   const handleEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor
@@ -165,6 +165,9 @@ export default function Editor({ roomId, language, onLanguageChange }) {
           defaultValue={getDefaultValue()}
           onMount={handleEditorMount}
           options={{
+            readOnly: !synced || role === 'viewer',
+            readOnlyMessage: { value: "Read-Only Mode: Viewers cannot edit this room" },
+            fixedOverflowWidgets: true,
             fontSize: 14,
             fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
             fontLigatures: true,
@@ -197,7 +200,6 @@ export default function Editor({ roomId, language, onLanguageChange }) {
             showFoldingControls: 'mouseover',
             links: true,
             colorDecorators: true,
-            readOnly: !synced, // Disable editing until initial sync is complete
           }}
           loading={
             <div style={{
@@ -234,6 +236,7 @@ export default function Editor({ roomId, language, onLanguageChange }) {
     synced,
     provider,
     ytext,
+    ydoc,
     status,
     ymeta,
   }
