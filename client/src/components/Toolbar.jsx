@@ -68,6 +68,7 @@ export default function Toolbar({
   historyOpen,
   onToggleHistory,
   onOpenVisualizer,
+  onDownload,
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -158,6 +159,7 @@ export default function Toolbar({
           className="icon-btn tooltip-wrapper"
           data-tooltip="Download Code"
           id="download-btn"
+          onClick={onDownload}
         >
           <Icons.Download />
         </button>

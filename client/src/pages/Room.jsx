@@ -154,6 +154,36 @@ export default function Room() {
     prevUsersRef.current = onlineUsers
   }, [onlineUsers, loading, provider, user?.username])
 
+  const handleDownload = () => {
+    if (!ytext) return
+    const content = ytext.toString()
+    
+    const extMap = {
+      javascript: 'js',
+      typescript: 'ts',
+      python: 'py',
+      java: 'java',
+      cpp: 'cpp',
+      csharp: 'cs',
+      html: 'html',
+      css: 'css',
+      json: 'json',
+      markdown: 'md'
+    }
+    const ext = extMap[language] || 'txt'
+    const filename = `codecollab-${roomId || 'export'}.${ext}`
+
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) {
     return (
       <div className="app-layout" style={{
@@ -197,6 +227,7 @@ export default function Room() {
         historyOpen={historyOpen}
         onToggleHistory={() => setHistoryOpen(!historyOpen)}
         onOpenVisualizer={() => setVisualizerOpen(true)}
+        onDownload={handleDownload}
       />
 
       {/* Main Content: Editor + Sidebar */}
