@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-export default function CrdtVisualizer({ ydoc, onClose }) {
+export default function CrdtVisualizer({ isOpen, ydoc, onClose }) {
   const [data, setData] = useState({});
   const [logs, setLogs] = useState([]);
   const [activeTab, setActiveTab] = useState('state'); // 'state' or 'log'
@@ -72,30 +72,35 @@ export default function CrdtVisualizer({ ydoc, onClose }) {
 
   return (
     <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)', zIndex: 1000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center'
+      width: isOpen ? '450px' : '0px',
+      transition: 'width 0.3s ease-in-out, border-color 0.3s ease-in-out',
+      overflow: 'hidden',
+      borderLeft: isOpen ? '1px solid var(--border-primary)' : '1px solid transparent',
+      background: 'var(--bg-secondary)',
+      flexShrink: 0,
+      zIndex: 5,
     }}>
       <div style={{
-        backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-primary)',
-        borderRadius: 'var(--radius-lg)', width: '650px', maxWidth: '90vw', maxHeight: '80vh',
-        display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+        width: '450px',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%'
       }}>
         <div style={{
           padding: '16px 20px', borderBottom: '1px solid var(--border-primary)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center'
         }}>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>CRDT Visualizer</h3>
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '15px', color: 'var(--text-primary)' }}>CRDT Logs</h3>
             <div style={{ display: 'flex', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
               <button 
                 onClick={() => setActiveTab('state')}
-                style={{ ...tabStyle, background: activeTab === 'state' ? 'var(--bg-hover)' : 'transparent' }}
-              >State Vector</button>
+                style={{ ...tabStyle, padding: '4px 8px', background: activeTab === 'state' ? 'var(--bg-hover)' : 'transparent' }}
+              >State</button>
               <button 
                 onClick={() => setActiveTab('log')}
-                style={{ ...tabStyle, background: activeTab === 'log' ? 'var(--bg-hover)' : 'transparent' }}
-              >Operation Log</button>
+                style={{ ...tabStyle, padding: '4px 8px', background: activeTab === 'log' ? 'var(--bg-hover)' : 'transparent' }}
+              >Logs</button>
             </div>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}>

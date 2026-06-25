@@ -219,6 +219,11 @@ export default function Room() {
           provider={provider}
           role={role}
         />
+        <CrdtVisualizer 
+          isOpen={visualizerOpen}
+          ydoc={ydoc} 
+          onClose={() => setVisualizerOpen(false)} 
+        />
       </div>
 
       {/* Bottom Status Bar */}
@@ -230,13 +235,6 @@ export default function Room() {
         status={status}
         roomId={roomId}
       />
-
-      {visualizerOpen && (
-        <CrdtVisualizer 
-          ydoc={ydoc} 
-          onClose={() => setVisualizerOpen(false)} 
-        />
-      )}
 
       {/* Toast Notifications */}
       <div style={{
