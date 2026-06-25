@@ -53,21 +53,26 @@ server.on('upgrade', async (request, socket, head) => {
     const token = url.searchParams.get('token')
     const roomId = url.pathname.slice(1) // e.g. /my-room -> my-room
 
-    // Dynamically import db.js because it is ESM and we are CJS
-    const db = await import('../server/db.js')
-    
     let role = 'viewer'
     if (token) {
       const jwt = require('jsonwebtoken')
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key')
       
-      const { data } = await db.getRoomRole(roomId, decoded.id)
-      if (data) {
-        role = data
-      } else if (db.isDemo) {
-        role = 'owner'
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+        const { createClient } = require('@supabase/supabase-js')
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+        const { data } = await supabase
+          .from('room_members')
+          .select('role')
+          .eq('room_id', roomId)
+          .eq('user_id', decoded.id)
+          .single()
+          
+        if (data) role = data.role
+      } else {
+        role = 'owner' // Fallback for demo
       }
-    } else if (db.isDemo) {
+    } else if (!process.env.SUPABASE_URL) {
       role = 'owner' // Fallback for local testing without login
     }
 
