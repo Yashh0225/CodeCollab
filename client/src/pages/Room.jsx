@@ -206,6 +206,7 @@ export default function Room() {
           roomId={roomId}
           ytext={ytext}
           language={language}
+          role={role}
           onClose={() => setHistoryOpen(false)}
         />
         <div className="editor-area" onClickCapture={() => historyOpen && setHistoryOpen(false)}>

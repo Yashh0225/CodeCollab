@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { saveSnapshot, listSnapshots } from '../services/api'
 import { DiffEditor } from '@monaco-editor/react'
 
-export default function HistoryPanel({ isOpen, roomId, ytext, language, onClose }) {
+export default function HistoryPanel({ isOpen, roomId, ytext, language, role, onClose }) {
   const [snapshots, setSnapshots] = useState([])
   const [diffSnapshot, setDiffSnapshot] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -29,6 +29,10 @@ export default function HistoryPanel({ isOpen, roomId, ytext, language, onClose 
   }, [isOpen, roomId])
 
   const handleSave = async () => {
+    if (role === 'viewer') {
+      alert("Viewers cannot save snapshots.")
+      return
+    }
     if (!ytext) return
     setIsSaving(true)
     try {
@@ -43,6 +47,10 @@ export default function HistoryPanel({ isOpen, roomId, ytext, language, onClose 
   }
 
   const handleRestore = (content) => {
+    if (role === 'viewer') {
+      alert("Viewers cannot restore snapshots.")
+      return
+    }
     if (!ytext) return
     if (!window.confirm("Are you sure you want to overwrite the current document for everyone with this snapshot?")) return
     
@@ -155,45 +163,43 @@ export default function HistoryPanel({ isOpen, roomId, ytext, language, onClose 
         </div>
       </div>
       
-      {diffSnapshot && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.85)', zIndex: 2000,
-          display: 'flex', flexDirection: 'column', padding: '40px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', color: 'white' }}>
-            <h2 style={{ margin: 0, fontSize: '20px' }}>
-              Comparing Snapshot ({new Date(diffSnapshot.saved_at).toLocaleString()}) with Current
-            </h2>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => { handleRestore(diffSnapshot.content); setDiffSnapshot(null); }}
-                className="btn btn-primary"
-              >
-                Restore This Snapshot
-              </button>
-              <button onClick={() => setDiffSnapshot(null)} className="btn btn-secondary">
-                Close
-              </button>
-            </div>
-          </div>
-          <div style={{ flex: 1, border: '1px solid var(--border-primary)', borderRadius: '8px', overflow: 'hidden' }}>
-            <DiffEditor
-              original={diffSnapshot.content}
-              modified={ytext ? ytext.toString() : ''}
-              language={language || 'javascript'}
-              theme="vs-dark"
-              options={{
-                readOnly: true,
-                minimap: { enabled: false },
-                renderSideBySide: true,
-                fontSize: 14,
-                fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace"
-              }}
-            />
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0,0,0,0.85)', zIndex: 2000,
+        display: diffSnapshot ? 'flex' : 'none', flexDirection: 'column', padding: '40px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', color: 'white' }}>
+          <h2 style={{ margin: 0, fontSize: '20px' }}>
+            Comparing Snapshot ({diffSnapshot ? new Date(diffSnapshot.saved_at).toLocaleString() : ''}) with Current
+          </h2>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => { handleRestore(diffSnapshot.content); setDiffSnapshot(null); }}
+              className="btn btn-primary"
+            >
+              Restore This Snapshot
+            </button>
+            <button onClick={() => setDiffSnapshot(null)} className="btn btn-secondary">
+              Close
+            </button>
           </div>
         </div>
-      )}
+        <div style={{ flex: 1, border: '1px solid var(--border-primary)', borderRadius: '8px', overflow: 'hidden' }}>
+          <DiffEditor
+            original={diffSnapshot ? diffSnapshot.content : ''}
+            modified={ytext ? ytext.toString() : ''}
+            language={language || 'javascript'}
+            theme="vs-dark"
+            options={{
+              readOnly: true,
+              minimap: { enabled: false },
+              renderSideBySide: true,
+              fontSize: 14,
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace"
+            }}
+          />
+        </div>
+      </div>
     </>
   )
 }
