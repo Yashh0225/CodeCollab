@@ -28,15 +28,18 @@ export default function CrdtVisualizer({ ydoc, onClose }) {
       });
     };
 
-    const handleUpdate = (update, origin) => {
+    const handleUpdate = (update, origin, doc, tr) => {
       updateData();
       
-      // Attempt to get a readable origin name (could be WebsocketProvider, local, etc)
-      let originName = 'local';
-      if (origin) {
-        if (typeof origin === 'string') originName = origin;
-        else if (origin.constructor && origin.constructor.name) originName = origin.constructor.name;
-        else originName = 'remote';
+      // Robustly check origin using the transaction's local flag
+      // This avoids minified class names like "wge" in production builds
+      let originName = 'unknown';
+      if (tr) {
+        originName = tr.local ? 'local' : 'remote';
+      } else if (origin) {
+        originName = typeof origin === 'string' ? origin : 'remote';
+      } else {
+        originName = 'local';
       }
 
       setLogs(prevLogs => {
