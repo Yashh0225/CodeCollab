@@ -1,18 +1,25 @@
+// ============================================
+// CodeCollab — Code Execution Route (Wandbox API Proxy)
+// ============================================
+// POST /execute — Run code via Wandbox (100% free, no API key)
+// Security: Routed through server — never called from browser
+// Rate-limited: 10 requests/min per user
+
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
 
 // ============================================
-// Language mapping (our IDs → Judge0 language IDs)
+// Language mapping (our IDs → Wandbox compiler IDs)
 // ============================================
 const LANGUAGE_MAP = {
-  javascript: 93, // Node.js 18.15.0
-  typescript: 94, // TypeScript 5.0.3
-  python:     71, // Python 3.8.1
-  java:       62, // Java 13.0.1
-  cpp:        54, // C++ 17
-  csharp:     51, // C#
+  javascript: 'nodejs-20.17.0',
+  typescript: 'typescript-5.6.2',
+  python:     'cpython-3.14.0',
+  java:       'openjdk-jdk-22+36',
+  cpp:        'gcc-13.2.0',
+  csharp:     'mono-6.12.0.199',
 }
 
 const SUPPORTED_LANGUAGES = Object.keys(LANGUAGE_MAP)
@@ -42,6 +49,7 @@ function checkRateLimit(userId) {
   return { allowed: true, remaining: RATE_LIMIT - entry.count }
 }
 
+// Clean up stale rate limit entries every 5 minutes
 setInterval(() => {
   const now = Date.now()
   for (const [key, val] of rateLimitMap) {
@@ -50,12 +58,13 @@ setInterval(() => {
 }, 5 * 60 * 1000)
 
 // ============================================
-// POST /execute — Submit code for execution via Judge0
+// POST /execute — Submit code for execution
 // ============================================
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { code, language, stdin } = req.body
 
+    // Validate input
     if (!code && code !== '') {
       return res.status(400).json({ error: 'Code is required' })
     }
@@ -67,6 +76,7 @@ router.post('/', requireAuth, async (req, res) => {
       })
     }
 
+    // Check rate limit
     const rateCheck = checkRateLimit(req.user.id)
     if (!rateCheck.allowed) {
       return res.status(429).json({
@@ -75,46 +85,43 @@ router.post('/', requireAuth, async (req, res) => {
       })
     }
 
-    const judge0Id = LANGUAGE_MAP[language]
-    const apiKey = process.env.JUDGE0_API_KEY
-    
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Server misconfiguration: missing JUDGE0_API_KEY environment variable.' })
-    }
+    const compiler = LANGUAGE_MAP[language]
 
-    const response = await fetch('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', {
+    // Call Wandbox API
+    const response = await fetch('https://wandbox.org/api/compile.json', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-RapidAPI-Key': apiKey,
-        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        source_code: code,
-        language_id: judge0Id,
+        code,
+        compiler,
         stdin: stdin || ''
       })
     })
 
-    if (response.status === 429) {
-      return res.status(429).json({ error: 'Judge0 daily limit exceeded. Please try again tomorrow.' })
-    }
-
     if (!response.ok) {
       const errText = await response.text()
-      console.error('Judge0 API error:', response.status, errText)
+      console.error('Wandbox API error:', response.status, errText)
       return res.status(502).json({ error: 'Code execution service temporarily unavailable.' })
     }
 
     const result = await response.json()
     
+    // Wandbox returns: { program_output, program_error, compiler_error, status }
+    // status is '0' for success, '1' for failure
+    
+    // Some compilers put stderr in compiler_error if it fails to compile
+    const isSuccess = result.status === '0'
+
     res.json({
-      stdout: result.stdout,
-      stderr: result.stderr,
-      compile_output: result.compile_output,
-      time: result.time,
-      memory: result.memory,
-      status: result.status || { id: 0, description: 'Unknown' },
+      stdout: result.program_output || null,
+      stderr: result.program_error || null,
+      compile_output: result.compiler_error || null,
+      time: null, 
+      memory: null, 
+      status: {
+        id: isSuccess ? 3 : 11, // 3 = Accepted, 11 = Runtime/Compile Error
+        description: isSuccess ? 'Accepted' : 'Error'
+      },
     })
 
   } catch (err) {
@@ -123,11 +130,12 @@ router.post('/', requireAuth, async (req, res) => {
   }
 })
 
+// GET /execute/languages — List supported languages
 router.get('/languages', (req, res) => {
   res.json({
     languages: Object.entries(LANGUAGE_MAP).map(([key, val]) => ({
       id: key,
-      judge0_id: val
+      compiler: val
     }))
   })
 })
