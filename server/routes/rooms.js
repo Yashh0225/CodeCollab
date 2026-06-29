@@ -181,7 +181,7 @@ router.post('/:id/invite', requireAuth, async (req, res) => {
     }
 
     // Bake role into a token
-    const token = jwt.sign({ roomId: id, role }, process.env.JWT_SECRET || 'super-secret-key', { expiresIn: '7d' });
+    const token = jwt.sign({ roomId: id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     res.json({ token, link: `/room/${id}?invite=${token}` });
   } catch (err) {
@@ -195,7 +195,7 @@ router.post('/:id/join', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { token } = req.body;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (decoded.roomId !== id) return res.status(400).json({ error: 'Invalid token for this room' });
 
     await addRoomMember(id, req.user.id, decoded.role);

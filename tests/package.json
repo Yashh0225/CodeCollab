@@ -1,0 +1,10 @@
+{
+  "name": "codecollab-tests",
+  "type": "module",
+  "scripts": {
+    "test": "node crdt-convergence.test.js"
+  },
+  "dependencies": {
+    "yjs": "^13.6.27"
+  }
+}

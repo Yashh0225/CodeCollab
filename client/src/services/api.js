@@ -171,3 +171,50 @@ export async function updateMemberRole(roomId, userId, role) {
 export async function fetchRoomRole(roomId) {
   return request(`/rooms/${roomId}/role`)
 }
+
+// ============================================
+// Code Execution API
+// ============================================
+const EXECUTE_SUPPORTED = ['javascript', 'typescript', 'python', 'java', 'cpp', 'csharp']
+
+export function isExecutionSupported(language) {
+  return EXECUTE_SUPPORTED.includes(language)
+}
+
+export async function executeCode(code, language, stdin) {
+  const token = getToken()
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15000) // 15s client-side timeout
+
+  try {
+    const response = await fetch(`${API_URL}/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ code, language, stdin }),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeout)
+
+    const data = await response.json()
+
+    if (response.status === 429) {
+      return { error: data.error || 'Rate limit exceeded. Try again in 60 seconds.' }
+    }
+
+    if (!response.ok) {
+      return { error: data.error || 'Execution failed' }
+    }
+
+    return data
+  } catch (err) {
+    clearTimeout(timeout)
+    if (err.name === 'AbortError') {
+      return { error: 'Execution timed out (15s). Your code may contain an infinite loop.' }
+    }
+    return { error: 'Execution service unavailable. Please try again later.' }
+  }
+}

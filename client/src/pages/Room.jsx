@@ -5,9 +5,10 @@ import Toolbar from '../components/Toolbar'
 import Sidebar from '../components/Sidebar'
 import HistoryPanel from '../components/HistoryPanel'
 import CrdtVisualizer from '../components/CrdtVisualizer'
+import OutputPanel from '../components/OutputPanel'
 import StatusBar from '../components/StatusBar'
 import { useAwareness } from '../hooks/useAwareness'
-import { getRoom, getUser, isAuthenticated, updateRoomLanguage, fetchRoomRole, joinRoom } from '../services/api'
+import { getRoom, getUser, isAuthenticated, updateRoomLanguage, fetchRoomRole, joinRoom, executeCode, isExecutionSupported } from '../services/api'
 
 export default function Room() {
   const { id: roomId } = useParams()
@@ -21,6 +22,9 @@ export default function Room() {
   const [role, setRole] = useState('none')
   const [loading, setLoading] = useState(true)
   const [toasts, setToasts] = useState([])
+  const [outputOpen, setOutputOpen] = useState(false)
+  const [outputData, setOutputData] = useState(null)
+  const [isRunning, setIsRunning] = useState(false)
   const user = getUser()
   const ymetaRef = useRef(null)
 
@@ -184,6 +188,25 @@ export default function Room() {
     URL.revokeObjectURL(url)
   }
 
+  const handleRun = async () => {
+    if (!ytext) return
+    if (isRunning) return
+    
+    setIsRunning(true)
+    setOutputOpen(true)
+    setOutputData(null)
+
+    try {
+      const code = ytext.toString()
+      const result = await executeCode(code, language)
+      setOutputData(result)
+    } catch (err) {
+      setOutputData({ error: err.message || 'Execution failed' })
+    } finally {
+      setIsRunning(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="app-layout" style={{
@@ -228,6 +251,10 @@ export default function Room() {
         onToggleHistory={() => setHistoryOpen(!historyOpen)}
         onOpenVisualizer={() => setVisualizerOpen(true)}
         onDownload={handleDownload}
+        onRun={handleRun}
+        role={role}
+        isRunning={isRunning}
+        canExecute={isExecutionSupported(language)}
       />
 
       {/* Main Content: Editor + Sidebar */}
@@ -240,8 +267,17 @@ export default function Room() {
           role={role}
           onClose={() => setHistoryOpen(false)}
         />
-        <div className="editor-area" onClickCapture={() => historyOpen && setHistoryOpen(false)}>
-          {editorComponent}
+        <div className="editor-area" style={{ display: 'flex', flexDirection: 'column' }} onClickCapture={() => historyOpen && setHistoryOpen(false)}>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            {editorComponent}
+          </div>
+          <OutputPanel
+            isOpen={outputOpen}
+            data={outputData}
+            isRunning={isRunning}
+            onClose={() => setOutputOpen(false)}
+            onClear={() => { setOutputData(null); setOutputOpen(false); }}
+          />
         </div>
         <Sidebar
           isOpen={sidebarOpen}

@@ -55,8 +55,16 @@ server.on('upgrade', async (request, socket, head) => {
 
     let role = 'viewer'
     if (token) {
+      const jwtSecret = process.env.JWT_SECRET
+      if (!jwtSecret) {
+        if (process.env.NODE_ENV === 'production') {
+          console.error('FATAL: JWT_SECRET is required in production')
+          socket.destroy()
+          return
+        }
+      }
       const jwt = require('jsonwebtoken')
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key')
+      const decoded = jwt.verify(token, jwtSecret || 'codecollab-dev-secret-UNSAFE')
       
       if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
         const { createClient } = require('@supabase/supabase-js')
@@ -69,10 +77,10 @@ server.on('upgrade', async (request, socket, head) => {
           .single()
           
         if (data) role = data.role
-      } else {
-        role = 'owner' // Fallback for demo
+      } else if (process.env.NODE_ENV !== 'production') {
+        role = 'owner' // Local dev only — fail closed in production
       }
-    } else if (!process.env.SUPABASE_URL) {
+    } else if (process.env.NODE_ENV !== 'production') {
       role = 'owner' // Fallback for local testing without login
     }
 

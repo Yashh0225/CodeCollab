@@ -6,7 +6,11 @@ import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 dotenv.config()
 
-const JWT_SECRET = process.env.JWT_SECRET || 'codecollab-dev-secret'
+const JWT_SECRET = process.env.JWT_SECRET || (
+  process.env.NODE_ENV === 'production'
+    ? (() => { console.error('FATAL: JWT_SECRET is required in production'); process.exit(1); })()
+    : 'codecollab-dev-secret-UNSAFE'
+)
 
 /**
  * Generate a JWT token for a user

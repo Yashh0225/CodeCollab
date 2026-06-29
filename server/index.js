@@ -12,6 +12,7 @@ import dotenv from 'dotenv'
 
 import authRoutes from './routes/auth.js'
 import roomRoutes from './routes/rooms.js'
+import executeRoutes from './routes/execute.js'
 import { findOrCreateOAuthUser, MIGRATION_SQL } from './db.js'
 
 dotenv.config()
@@ -110,6 +111,7 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
 // ============================================
 app.use('/auth', authRoutes)
 app.use('/rooms', roomRoutes)
+app.use('/execute', executeRoutes)
 
 // Health check
 app.get('/health', (req, res) => {
@@ -162,6 +164,8 @@ app.listen(PORT, () => {
   console.log('  GET  /rooms/:id        — Room details')
   console.log('  POST /rooms/:id/snapshots — Save snapshot')
   console.log('  GET  /rooms/:id/snapshots — List snapshots')
+  console.log('  POST /execute             — Run code (Judge0)')
+  console.log('  GET  /execute/languages   — Supported languages')
   console.log('  GET  /health           — Health check')
   if (process.env.NODE_ENV !== 'production') {
     console.log('  GET  /migration        — View SQL migration')

@@ -55,6 +55,11 @@ const Icons = {
       <ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
     </svg>
   ),
+  Play: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  ),
 }
 
 export default function Toolbar({
@@ -69,6 +74,10 @@ export default function Toolbar({
   onToggleHistory,
   onOpenVisualizer,
   onDownload,
+  onRun,
+  role,
+  isRunning,
+  canExecute,
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -153,6 +162,29 @@ export default function Toolbar({
           id="share-btn"
         >
           <Icons.Share />
+        </button>
+
+        <button
+          className={`icon-btn tooltip-wrapper${isRunning ? ' running' : ''}`}
+          data-tooltip={
+            role === 'viewer' ? 'Viewers cannot run code'
+            : !canExecute ? `Execution not available for this language`
+            : isRunning ? 'Running...'
+            : 'Run Code'
+          }
+          onClick={() => {
+            if (role === 'viewer') { alert('Viewers cannot run code.'); return; }
+            if (!canExecute) { alert('Execution not available for this language.'); return; }
+            onRun && onRun()
+          }}
+          id="run-btn"
+          disabled={isRunning}
+          style={{
+            ...((role === 'viewer' || !canExecute) ? { opacity: 0.4, cursor: 'not-allowed' } : {}),
+            ...(isRunning ? { color: '#f59e0b' } : { color: '#10b981' }),
+          }}
+        >
+          <Icons.Play />
         </button>
 
         <button
