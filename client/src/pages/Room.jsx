@@ -268,9 +268,7 @@ export default function Room() {
           onClose={() => setHistoryOpen(false)}
         />
         <div className="editor-area" style={{ display: 'flex', flexDirection: 'column' }} onClickCapture={() => historyOpen && setHistoryOpen(false)}>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            {editorComponent}
-          </div>
+          {editorComponent}
           <OutputPanel
             isOpen={outputOpen}
             data={outputData}
