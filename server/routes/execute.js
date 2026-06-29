@@ -1,9 +1,10 @@
 // ============================================
-// CodeCollab — Code Execution Route (Judge0 CE Proxy)
+// CodeCollab — Code Execution Route (Piston API Proxy)
 // ============================================
-// POST /execute — Run code via Judge0 CE (RapidAPI)
-// Security: Never exposes API key to the browser
+// POST /execute — Run code via Piston (free, no API key)
+// Security: Routed through server — never called from browser
 // Rate-limited: 10 requests/min per user
+// https://github.com/engineer-man/piston
 
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
@@ -11,15 +12,15 @@ import { requireAuth } from '../middleware/auth.js'
 const router = Router()
 
 // ============================================
-// Language ID mapping (our IDs → Judge0 numeric IDs)
+// Language mapping (our IDs → Piston language + version)
 // ============================================
 const LANGUAGE_MAP = {
-  javascript: { id: 63, name: 'JavaScript (Node.js 12.14.0)' },
-  typescript: { id: 74, name: 'TypeScript (3.7.4)' },
-  python:     { id: 71, name: 'Python (3.8.1)' },
-  java:       { id: 62, name: 'Java (OpenJDK 13.0.1)' },
-  cpp:        { id: 54, name: 'C++ (GCC 9.2.0)' },
-  csharp:     { id: 51, name: 'C# (Mono 6.6.0.161)' },
+  javascript: { language: 'javascript', version: '18.15.0' },
+  typescript: { language: 'typescript', version: '5.0.3' },
+  python:     { language: 'python',     version: '3.10.0' },
+  java:       { language: 'java',       version: '15.0.2' },
+  cpp:        { language: 'c++',        version: '10.2.0' },
+  csharp:     { language: 'csharp',     version: '6.12.0' },
 }
 
 const SUPPORTED_LANGUAGES = Object.keys(LANGUAGE_MAP)
@@ -27,9 +28,9 @@ const SUPPORTED_LANGUAGES = Object.keys(LANGUAGE_MAP)
 // ============================================
 // In-memory rate limiter (per user, 10 req/min)
 // ============================================
-const rateLimitMap = new Map() // userId → { count, resetTime }
+const rateLimitMap = new Map()
 const RATE_LIMIT = 10
-const RATE_WINDOW_MS = 60 * 1000 // 1 minute
+const RATE_WINDOW_MS = 60 * 1000
 
 function checkRateLimit(userId) {
   const now = Date.now()
@@ -49,7 +50,7 @@ function checkRateLimit(userId) {
   return { allowed: true, remaining: RATE_LIMIT - entry.count }
 }
 
-// Clean up stale entries every 5 minutes
+// Clean up stale rate limit entries every 5 minutes
 setInterval(() => {
   const now = Date.now()
   for (const [key, val] of rateLimitMap) {
@@ -85,81 +86,43 @@ router.post('/', requireAuth, async (req, res) => {
       })
     }
 
-    // Check API key
-    const apiKey = process.env.JUDGE0_API_KEY
-    if (!apiKey) {
-      return res.status(503).json({ error: 'Code execution service is not configured' })
-    }
+    const pistonLang = LANGUAGE_MAP[language]
 
-    const languageId = LANGUAGE_MAP[language].id
-
-    // Step 1: Submit code to Judge0
-    const submitResponse = await fetch('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false', {
+    // Call Piston API
+    const response = await fetch('https://emkc.org/api/v2/piston/execute', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-RapidAPI-Key': apiKey,
-        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        source_code: Buffer.from(code).toString('base64'),
-        language_id: languageId,
-        stdin: stdin ? Buffer.from(stdin).toString('base64') : null,
-        cpu_time_limit: 5,    // 5 second max
-        memory_limit: 128000, // 128 MB
+        language: pistonLang.language,
+        version: pistonLang.version,
+        files: [{ content: code }],
+        stdin: stdin || '',
+        run_timeout: 5000, // 5 second max execution
       })
     })
 
-    if (!submitResponse.ok) {
-      const errText = await submitResponse.text()
-      console.error('Judge0 submit error:', submitResponse.status, errText)
-      return res.status(502).json({ error: 'Failed to submit code for execution' })
+    if (!response.ok) {
+      const errText = await response.text()
+      console.error('Piston API error:', response.status, errText)
+      return res.status(502).json({ error: 'Code execution service temporarily unavailable' })
     }
 
-    const { token } = await submitResponse.json()
+    const result = await response.json()
 
-    // Step 2: Poll for result (max 10 attempts, 1s apart)
-    let result = null
-    for (let attempt = 0; attempt < 10; attempt++) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      const pollResponse = await fetch(
-        `https://judge0-ce.p.rapidapi.com/submissions/${token}?base64_encoded=true`,
-        {
-          headers: {
-            'X-RapidAPI-Key': apiKey,
-            'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-          }
-        }
-      )
-
-      if (!pollResponse.ok) {
-        console.error('Judge0 poll error:', pollResponse.status)
-        continue
-      }
-
-      result = await pollResponse.json()
-
-      // Status IDs: 1=In Queue, 2=Processing, 3+=Done
-      if (result.status && result.status.id > 2) {
-        break
-      }
-    }
-
-    if (!result || (result.status && result.status.id <= 2)) {
-      return res.status(504).json({ error: 'Code execution timed out. Your code may contain an infinite loop.' })
-    }
-
-    // Decode base64 results
-    const decode = (b64) => b64 ? Buffer.from(b64, 'base64').toString('utf-8') : null
+    // Piston returns { run: { stdout, stderr, code, signal, output }, compile?: { ... } }
+    const run = result.run || {}
+    const compile = result.compile || {}
 
     res.json({
-      stdout: decode(result.stdout),
-      stderr: decode(result.stderr),
-      compile_output: decode(result.compile_output),
-      time: result.time,
-      memory: result.memory,
-      status: result.status,
+      stdout: run.stdout || null,
+      stderr: run.stderr || null,
+      compile_output: compile.stderr || null,
+      time: null, // Piston doesn't return execution time
+      memory: null, // Piston doesn't return memory usage
+      status: {
+        id: run.code === 0 ? 3 : 11, // 3 = Accepted, 11 = Runtime Error (matches Judge0 convention)
+        description: run.code === 0 ? 'Accepted' : (run.signal ? `Signal: ${run.signal}` : `Exit Code: ${run.code}`)
+      },
     })
 
   } catch (err) {
@@ -173,8 +136,8 @@ router.get('/languages', (req, res) => {
   res.json({
     languages: Object.entries(LANGUAGE_MAP).map(([key, val]) => ({
       id: key,
-      name: val.name,
-      judgeId: val.id
+      name: val.language,
+      version: val.version
     }))
   })
 })
