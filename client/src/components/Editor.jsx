@@ -92,14 +92,6 @@ export default function Editor({ roomId, language, onLanguageChange, role }) {
   const handleEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor
 
-    // Bind Yjs to Monaco
-    bindingRef.current = new MonacoBinding(
-      ytext,
-      editor.getModel(),
-      new Set([editor]),
-      provider ? provider.awareness : null
-    )
-
     // Track cursor position
     editor.onDidChangeCursorPosition((e) => {
       setCursorPosition({
@@ -124,11 +116,24 @@ export default function Editor({ roomId, language, onLanguageChange, role }) {
     editor.focus()
   }, [ytext])
 
+  // Setup binding when provider is ready
+  useEffect(() => {
+    if (editorRef.current && provider && !bindingRef.current) {
+      bindingRef.current = new MonacoBinding(
+        ytext,
+        editorRef.current.getModel(),
+        new Set([editorRef.current]),
+        provider.awareness
+      )
+    }
+  }, [provider, ytext])
+
   // Cleanup binding on unmount
   useEffect(() => {
     return () => {
       if (bindingRef.current) {
         bindingRef.current.destroy()
+        bindingRef.current = null
       }
     }
   }, [])
